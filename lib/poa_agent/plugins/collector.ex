@@ -55,11 +55,12 @@ defmodule POAAgent.Plugins.Collector do
       end
 
       @doc false
-      def transfer(data, label, transfers) do
+      defp transfer(data, label, transfers) do
         Enum.each(transfers, &GenServer.cast(&1, %{label: label, data: data}))
         :ok
       end
 
+      @doc false
       defp set_collector_timer() do
         Process.send_after(self(), :collect, 5000) # TODO timeout must be configurable
       end
