@@ -5,7 +5,7 @@ use Mix.Config
 config :poa_agent, 
        :collectors,
        [
-         # {:my_collector, POAAgent.Plugins.Collectors.MyCollector, :my_metrics, [host: "localhost", port: 1234]}
+         # {:my_collector, POAAgent.Plugins.Collectors.MyCollector, 1000, :my_metrics, [host: "localhost", port: 1234]}
        ]
 
 # configuration for transfers. The format for each collector is {collector_process_id, module, args}

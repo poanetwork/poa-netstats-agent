@@ -18,7 +18,7 @@ defmodule POAAgent.PluginsTest do
       end
     end
 
-    assert Collector1.init(%{}) == {:ok, %{internal_state: :no_state}}
+    assert Collector1.init(%{frequency: 5_000}) == {:ok, %{internal_state: :no_state, frequency: 5_000}}
     assert Collector1.handle_call(:msg, :from, :state) == {:noreply, :state}
     assert Collector1.handle_info(:msg, :state) == {:noreply, :state}
     assert Collector1.handle_cast(:msg, :state) == {:noreply, :state}
@@ -92,7 +92,7 @@ defmodule POAAgent.PluginsTest do
     transfer1 = :transfer2
 
     {:ok, tpid} = Transfer2.start_link(%{name: transfer1, args: self()})
-    {:ok, cpid} = Collector2.start_link(%{name: :collector2, transfers: [transfer1], label: :label, args: self()})
+    {:ok, cpid} = Collector2.start_link(%{name: :collector2, transfers: [transfer1], label: :label, args: self(), frequency: 2_000})
 
     assert_receive {:sent, ^cpid, "data retrieved"}, 20_000
     assert_receive {:received, ^tpid, :label, "data retrieved"}, 20_000

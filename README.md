@@ -2,6 +2,14 @@
 
 **TODO: Add description**
 
+## Documentation
+
+In order to create the documentation
+
+```
+mix docs
+```
+
 ## Run
 
 POAAgent is an Elixir application, in order to run it first we need to fetch the dependencies and compile it.

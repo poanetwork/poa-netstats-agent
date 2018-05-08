@@ -1,13 +1,16 @@
 defmodule POAAgent.MixProject do
   use Mix.Project
 
+  @version "0.1.0"
+
   def project do
     [
       app: :poa_agent,
-      version: "0.1.0",
+      version: @version,
       elixir: "~> 1.6",
       start_permanent: Mix.env() == :prod,
-      deps: deps()
+      deps: deps(),
+      docs: docs()
     ]
   end
 
@@ -21,7 +24,25 @@ defmodule POAAgent.MixProject do
   defp deps do
     [
       {:credo, "~> 0.9", only: [:dev, :test], runtime: false},
-      {:dialyxir, "~> 0.5", only: [:dev], runtime: false}
+      {:dialyxir, "~> 0.5", only: [:dev], runtime: false},
+
+      # Docs
+      {:ex_doc, "~> 0.18", only: :dev, runtime: false}
     ]
   end
+
+  defp docs do
+    [
+      source_ref: "v#{@version}",
+      main: "POAAgent.Application",
+      source_url: "https://github.com/poanetwork/poa-netstats-agent",
+      groups_for_modules: [
+        "Plugins": [
+          POAAgent.Plugins.Collector,
+          POAAgent.Plugins.Transfer,
+        ]
+     ]
+    ]
+  end
+
 end

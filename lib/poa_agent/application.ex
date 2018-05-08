@@ -1,5 +1,9 @@
 defmodule POAAgent.Application do
-  @moduledoc false
+  @moduledoc """
+
+  This module implements the Application behaviour
+
+  """
 
   use Application
 

@@ -12,8 +12,8 @@ defmodule POAAgent.Plugins.Collectors.Supervisor do
     collectors = Application.get_env(:poa_agent, :collectors)
     mappings = Application.get_env(:poa_agent, :mappings)
 
-    children = for {name, module, label, args} <- collectors do
-      worker(module, [%{name: name, transfers: mappings[name], label: label, args: args}])
+    children = for {name, module, frequency, label, args} <- collectors do
+      worker(module, [%{name: name, transfers: mappings[name], frequency: frequency, label: label, args: args}])
     end
 
     opts = [strategy: :one_for_one]
