@@ -5,8 +5,7 @@ defmodule POAAgent.Plugins.Transfer do
 
   @callback data_received(label :: atom(), data :: any(), state :: any()) :: {:ok, any()}
 
-  @callback terminate(reason, state :: term()) :: term()
-    when reason: :normal | :shutdown | {:shutdown, term()}
+  @callback terminate(state :: term()) :: term()
 
   defmacro __using__(_opt) do
     quote do
@@ -45,6 +44,11 @@ defmodule POAAgent.Plugins.Transfer do
       @doc false
       def code_change(_old, state, _extra) do
         {:ok, state}
+      end
+
+      @doc false
+      def terminate(_reason, state) do
+        terminate(state)
       end
 
     end

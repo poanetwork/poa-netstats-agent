@@ -11,7 +11,7 @@ defmodule POAAgent.Plugins.Collectors.MyCollector do
     {:ok, "data retrieved", :no_state}
   end
 
-  def terminate(_reason, _state) do
+  def terminate(_state) do
     :ok
   end
 

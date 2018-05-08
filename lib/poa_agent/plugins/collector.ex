@@ -5,8 +5,7 @@ defmodule POAAgent.Plugins.Collector do
 
   @callback collect(state :: any()) :: {:ok, data :: any(), state :: any()}
 
-  @callback terminate(reason, state :: term()) :: term()
-    when reason: :normal | :shutdown | {:shutdown, term()}
+  @callback terminate(state :: term()) :: term()
 
   defmacro __using__(_opt) do
     quote do
@@ -48,6 +47,11 @@ defmodule POAAgent.Plugins.Collector do
       @doc false
       def code_change(_old, state, _extra) do
         {:ok, state}
+      end
+
+      @doc false
+      def terminate(_reason, state) do
+        terminate(state)
       end
 
       @doc false
