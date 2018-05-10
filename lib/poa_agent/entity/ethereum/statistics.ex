@@ -15,14 +15,27 @@ defmodule POAAgent.Entity.Ethereum.Statistics do
   }
 
   defstruct [
-    :active?,
-    :mining?,
-    :hashrate,
-    :peers,
-    :pending,
-    :gas_price,
-    :block,
-    :syncing?,
-    :uptime
+    active?: nil,
+    mining?: nil,
+    hashrate: nil,
+    peers: nil,
+    pending: nil,
+    gas_price: nil,
+    block: %POAAgent.Entity.Ethereum.Block{},
+    syncing?: nil,
+    uptime: nil
   ]
+
+  defimpl POAAgent.Entity.NameConvention do
+    def from_elixir_to_node(x) do
+      mapping = [
+        active?: :active,
+        mining?: :mining,
+        gas_price: :gasPrice,
+        syncing?: :syncing
+      ]
+      x = Enum.reduce(mapping, x, &POAAgent.Entity.Name.change/2)
+      Map.update!(x, :block, &POAAgent.Entity.NameConvention.from_elixir_to_node/1)
+    end
+  end
 end

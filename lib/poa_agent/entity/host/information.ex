@@ -31,4 +31,13 @@ defmodule POAAgent.Entity.Host.Information do
     :client,
     :can_update_history?
   ]
+
+  defimpl POAAgent.Entity.NameConvention do
+    def from_elixir_to_node(x) do
+      mapping = [
+        can_update_history?: :canUpdateHistory
+      ]
+      Enum.reduce(mapping, x, &POAAgent.Entity.Name.change/2)
+    end
+  end
 end

@@ -49,4 +49,22 @@ defmodule POAAgent.Entity.Ethereum.Block do
     :transactions_root,
     :uncles
   ]
+
+  defimpl POAAgent.Entity.NameConvention do
+    def from_elixir_to_node(x) do
+      mapping = [
+        extra_data: :extraData,
+        gas_limit: :gasLimit,
+        gas_used: :gasUsed,
+        parent_hash: :parentHash,
+        receipts_root: :receiptsRoot,
+        seal_fields: :sealFields,
+        sha3_uncles: :sha3Uncles,
+        state_root: :stateRoot,
+        total_difficulty: :totalDifficulty,
+        transactions_root: :transactionsRoot
+      ]
+      Enum.reduce(mapping, x, &POAAgent.Entity.Name.change/2)
+    end
+  end
 end
