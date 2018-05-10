@@ -9,6 +9,15 @@ defmodule POAAgent.Format do
 
       ## A literal hex string like "0x0123456789abcdef"
       @type t :: String.t
+
+      @spec decimalize(t) :: String.t | :format_error
+      def decimalize("0x" <> trimmed_hex) do
+        {integer, _} = Integer.parse(trimmed_hex, 16)
+        Integer.to_string(integer)
+      end
+      def decimalize(_) do
+        :format_error
+      end
     end
 
     defmodule TrimmedHex do

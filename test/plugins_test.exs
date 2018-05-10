@@ -10,7 +10,7 @@ defmodule POAAgent.PluginsTest do
       end
 
       def collect(:no_state) do
-        {:ok, "data retrieved", :no_state}
+        {:transfer, "data retrieved", :no_state}
       end
 
       def terminate(_state) do
@@ -64,7 +64,7 @@ defmodule POAAgent.PluginsTest do
       def collect(test_pid) do
         data = "data retrieved"
         send test_pid, {:sent, self(), data}
-        {:ok, data, test_pid}
+        {:transfer, data, test_pid}
       end
 
       def terminate(_state) do

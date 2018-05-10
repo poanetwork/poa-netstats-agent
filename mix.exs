@@ -24,8 +24,12 @@ defmodule POAAgent.MixProject do
 
   defp deps do
     [
+      {:ethereumex, "~> 0.3"},
+
+      # Tests
       {:credo, "~> 0.9", only: [:dev, :test], runtime: false},
       {:dialyxir, "~> 0.5", only: [:dev], runtime: false},
+      {:mock, "~> 0.3", only: [:test], runtime: false},
 
       # Docs
       {:ex_doc, "~> 0.18", only: :dev, runtime: false}
@@ -41,8 +45,11 @@ defmodule POAAgent.MixProject do
         "Plugins": [
           POAAgent.Plugins.Collector,
           POAAgent.Plugins.Transfer,
+        ],
+        "Ethereum Plugins": [
+          POAAgent.Plugins.Collectors.Eth.LatestBlock
         ]
-     ]
+      ]
     ]
   end
 
