@@ -10,6 +10,7 @@ defmodule POAAgent.MixProject do
       elixir: "~> 1.6",
       start_permanent: Mix.env() == :prod,
       deps: deps(),
+      dialyzer: dialyzer(),
       docs: docs()
     ]
   end
@@ -45,4 +46,11 @@ defmodule POAAgent.MixProject do
     ]
   end
 
+  defp dialyzer do
+    [
+      paths: [
+        "_build/#{Mix.env()}/lib/poa_agent/consolidated"
+      ]
+    ]
+  end
 end
