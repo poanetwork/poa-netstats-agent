@@ -49,7 +49,7 @@ defmodule POAAgent.Plugins.Transfer do
           {:ok, :no_state}
         end
 
-        def terminate(_reason, _state) do
+        def terminate(_state) do
           :ok
         end
 

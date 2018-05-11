@@ -67,10 +67,10 @@ defmodule POAAgent.Plugins.Collector do
 
         def collect(:no_state) do
           IO.puts "I am collecting data!"
-          {:ok, "data retrieved", :no_state}
+          {:transfer, "data retrieved", :no_state}
         end
 
-        def terminate(_reason, _state) do
+        def terminate(_state) do
           :ok
         end
 
@@ -89,9 +89,12 @@ defmodule POAAgent.Plugins.Collector do
 
   @doc """
     In this callback is where the metrics collection logic must be placed.
-    It must return `{:ok, data, state}`. `data` is the retrieved metrics.
+    It must return `{:transfer, data, state}` where `data` is the retrieved metrics or
+    `{:notransfer, state} when for some reason we don't want to send data to the transfer int
+    that moment
   """
-  @callback collect(state :: any()) :: {:ok, data :: any(), state :: any()}
+  @callback collect(state :: any()) :: {:transfer, data :: any(), state :: any()}
+                                     | {:notransfer, state :: any()}
 
   @doc """
     This callback is called just before the Process goes down. This is a good place for closing connections.
@@ -122,8 +125,11 @@ defmodule POAAgent.Plugins.Collector do
 
       @doc false
       def handle_info(:collect, state) do
-        {:ok, data, internal_state} = collect(state.internal_state)
-        transfer(data, state.label, state.transfers)
+        internal_state =
+          state.internal_state
+          |> collect()
+          |> transfer(state.label, state.transfers)
+
         set_collector_timer(state.frequency)
         {:noreply, %{state | internal_state: internal_state}}
       end
@@ -147,9 +153,12 @@ defmodule POAAgent.Plugins.Collector do
       end
 
       @doc false
-      defp transfer(data, label, transfers) do
+      defp transfer({:transfer, data, internal_state}, label, transfers) do
         Enum.each(transfers, &GenServer.cast(&1, %{label: label, data: data}))
-        :ok
+        internal_state
+      end
+      defp transfer({:notransfer, internal_state}, _label, _transfers) do
+        internal_state
       end
 
       @doc false
