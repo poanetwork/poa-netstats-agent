@@ -9,6 +9,7 @@ defmodule POAAgent.MixProject do
       version: @version,
       elixir: "~> 1.6",
       start_permanent: Mix.env() == :prod,
+      elixirc_paths: elixirc_paths(Mix.env),
       deps: deps(),
       dialyzer: dialyzer(),
       docs: docs()
@@ -22,6 +23,9 @@ defmodule POAAgent.MixProject do
     ]
   end
 
+  defp elixirc_paths(:test), do: ["lib", "test/ancillary"]
+  defp elixirc_paths(_),     do: ["lib"]
+
   defp deps do
     [
       {:ethereumex, "~> 0.3"},
@@ -32,7 +36,11 @@ defmodule POAAgent.MixProject do
       {:mock, "~> 0.3", only: [:test], runtime: false},
 
       # Docs
-      {:ex_doc, "~> 0.18", only: :dev, runtime: false}
+      {:ex_doc, "~> 0.18", only: :dev, runtime: false},
+
+      # Transfer
+      {:websockex, "~> 0.4"},
+      {:jason, "~> 1.0"}
     ]
   end
 

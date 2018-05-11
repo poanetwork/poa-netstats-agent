@@ -21,3 +21,5 @@ config :poa_agent,
        [
          # {:my_collector, [:my_transfer]}
        ]
+
+import_config "#{Mix.env}.exs"

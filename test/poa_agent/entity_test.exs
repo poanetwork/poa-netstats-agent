@@ -13,7 +13,6 @@ defmodule POAAgent.EntityTest do
     x = [Host.Information, Ethereum.Block, Ethereum.Statistics]
     |> Enum.map(&Kernel.struct/1)
     |> Enum.map(&POAAgent.Entity.NameConvention.from_elixir_to_node/1)
-    |> Enum.map(&Map.from_struct/1)
     |> Enum.map(&Map.keys/1)
     |> List.flatten()
     |> Enum.map(&Atom.to_string/1)

@@ -37,7 +37,8 @@ defmodule POAAgent.Entity.Host.Information do
       mapping = [
         can_update_history?: :canUpdateHistory
       ]
-      Enum.reduce(mapping, x, &POAAgent.Entity.Name.change/2)
+      x = Enum.reduce(mapping, x, &POAAgent.Entity.Name.change/2)
+      Map.from_struct(x)
     end
   end
 end
