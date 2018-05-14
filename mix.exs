@@ -47,7 +47,8 @@ defmodule POAAgent.MixProject do
           POAAgent.Plugins.Transfer,
         ],
         "Ethereum Plugins": [
-          POAAgent.Plugins.Collectors.Eth.LatestBlock
+          POAAgent.Plugins.Collectors.Eth.LatestBlock,
+          POAAgent.Plugins.Collectors.Eth.Stats
         ]
       ]
     ]

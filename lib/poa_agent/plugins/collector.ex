@@ -81,11 +81,14 @@ defmodule POAAgent.Plugins.Collector do
   @doc """
     A callback executed when the Collector Plugin starts.
     The argument is retrieved from the configuration file when the Collector is defined
-    It must return `{:ok, state}`, that `state` will be keept as in `GenServer` and can be
+    It can return `{:ok, state}`, that `state` will be keept as in `GenServer` and can be
     retrieved in the `collect/1` function.
+    There are some cases where we want to send data to the transfer after initialize the
+    Collector, if that is the case you must return `{:transfer, data, state}` where the data is the
+    metrics we want to send to the transfer
   """
-  @callback init_collector(args :: term()) ::
-      {:ok, any()}
+  @callback init_collector(args :: term()) :: {:ok, state :: any()}
+                                            | {:transfer, data :: any(), state :: any()}
 
   @doc """
     In this callback is where the metrics collection logic must be placed.
@@ -113,7 +116,14 @@ defmodule POAAgent.Plugins.Collector do
 
       @doc false
       def init(state) do
-        {:ok, internal_state} = init_collector(state[:args])
+        internal_state =
+          case init_collector(state[:args]) do
+            {:ok, internal_state} ->
+              internal_state
+            {:transfer, _, _} = transfer ->
+              transfer |> transfer(state.label, state.transfers)
+          end
+
         set_collector_timer(state.frequency)
         {:ok, Map.put(state, :internal_state, internal_state)}
       end
