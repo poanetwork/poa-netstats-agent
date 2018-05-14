@@ -65,7 +65,10 @@ defmodule POAAgent.Transfers.WebSocket.Primus do
       WebSockex.start_link(address, __MODULE__, state)
     end
 
-    def handle_frame({_type, _msg}, state) do
+    def handle_frame({_type, _msg} = frame, state) do
+      require Logger
+
+      Logger.info("got an unexpected frame: #{inspect frame}")
       {:ok, state}
     end
   end
