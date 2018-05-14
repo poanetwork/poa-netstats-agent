@@ -1,10 +1,12 @@
-defmodule POAAgent.Transfers.WebSocket.Primus do
+defmodule POAAgent.Plugins.Transfers.WebSocket.Primus do
+  use POAAgent.Plugins.Transfer
+
   alias POAAgent.Entity
 
   alias POAAgent.Entity.Host
   alias POAAgent.Entity.Ethereum
 
-  alias POAAgent.Transfers.WebSocket.Primus
+  alias POAAgent.Plugins.Transfers.WebSocket.Primus
 
   defmodule State do
     @moduledoc false
@@ -15,6 +17,36 @@ defmodule POAAgent.Transfers.WebSocket.Primus do
       :name,
       :secret
     ]
+  end
+
+  def init_transfer(_) do
+    context = struct!(Primus.State, Application.get_env(:poa_agent, Primus))
+    state = nil
+    address = Map.fetch!(context, :address)
+    {:ok, client} = Primus.Client.start_link(address, state)
+
+    event = %POAAgent.Entity.Host.Information{}
+    |> Primus.encode(context)
+    |> Jason.encode!()
+    :ok = Primus.Client.send(client, event)
+
+    {:ok, %{client: client, context: context}}
+  end
+
+  def data_received(label, data, %{client: client, context: context} = state) do
+    require Logger
+    Logger.info("Received data from the collector referenced by label: #{label}.")
+
+    event = data
+    |> Primus.encode(context)
+    |> Jason.encode!()
+    :ok = Primus.Client.send(client, event)
+
+    {:ok, state}
+  end
+
+  def terminate(_) do
+    :ok
   end
 
   def encode(%Host.Information{} = x, %Primus.State{identifier: i, secret: s}) do

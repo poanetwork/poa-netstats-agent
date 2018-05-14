@@ -1,6 +1,6 @@
 defmodule POAAgent.Transfers.WebSocketTest do
   use ExUnit.Case
-  alias POAAgent.Transfers.WebSocket.Primus
+  alias POAAgent.Plugins.Transfers.WebSocket.Primus
   alias Jason, as: JSON
 
   @tag :system
@@ -22,7 +22,7 @@ defmodule POAAgent.Transfers.WebSocketTest do
     context = struct!(Primus.State, Application.get_env(:poa_agent, Primus))
     encode = fn entity ->
       entity
-      |> POAAgent.Transfers.WebSocket.Primus.encode(context)
+      |> Primus.encode(context)
       |> JSON.encode!()
     end
 
