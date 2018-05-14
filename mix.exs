@@ -48,7 +48,8 @@ defmodule POAAgent.MixProject do
         ],
         "Ethereum Plugins": [
           POAAgent.Plugins.Collectors.Eth.LatestBlock,
-          POAAgent.Plugins.Collectors.Eth.Stats
+          POAAgent.Plugins.Collectors.Eth.Stats,
+          POAAgent.Plugins.Collectors.Eth.Pending
         ]
       ]
     ]
