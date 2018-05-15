@@ -12,7 +12,8 @@ defmodule POAAgent.MixProject do
       elixirc_paths: elixirc_paths(Mix.env),
       deps: deps(),
       dialyzer: dialyzer(),
-      docs: docs()
+      docs: docs(),
+      test_coverage: [tool: ExCoveralls]
     ]
   end
 
@@ -34,6 +35,7 @@ defmodule POAAgent.MixProject do
       {:credo, "~> 0.9", only: [:dev, :test], runtime: false},
       {:dialyxir, "~> 0.5", only: [:dev], runtime: false},
       {:mock, "~> 0.3", only: [:test], runtime: false},
+      {:excoveralls, "~> 0.8", only: [:test, :dev], runtime: false},
 
       # Docs
       {:ex_doc, "~> 0.18", only: :dev, runtime: false},
