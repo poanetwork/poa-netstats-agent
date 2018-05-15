@@ -8,6 +8,8 @@ defmodule POAAgent.Plugins.Transfers.WebSocket.Primus do
 
   alias POAAgent.Plugins.Transfers.WebSocket.Primus
 
+  alias POAAgent.Entity.Host.Information
+
   defmodule State do
     @moduledoc false
 
@@ -15,7 +17,8 @@ defmodule POAAgent.Plugins.Transfers.WebSocket.Primus do
       :address,
       :identifier,
       :name,
-      :secret
+      :secret,
+      :contact
     ]
   end
 
@@ -25,7 +28,7 @@ defmodule POAAgent.Plugins.Transfers.WebSocket.Primus do
     address = Map.fetch!(context, :address)
     {:ok, client} = Primus.Client.start_link(address, state)
 
-    event = %POAAgent.Entity.Host.Information{}
+    event = information()
     |> Primus.encode(context)
     |> Jason.encode!()
     :ok = Primus.Client.send(client, event)
@@ -82,6 +85,28 @@ defmodule POAAgent.Plugins.Transfers.WebSocket.Primus do
     |> Map.put(:id, i)
     |> Map.put(:history, x)
     |> POAAgent.Format.PrimusEmitter.wrap(event: "history")
+  end
+
+  def information() do
+    config = Application.get_env(:poa_agent, __MODULE__)
+
+    with {:ok, coinbase} <- Ethereumex.HttpClient.eth_coinbase(),
+         {:ok, protocol} <-  Ethereumex.HttpClient.eth_protocol_version(),
+         {:ok, node} <- Ethereumex.HttpClient.web3_client_version(),
+         {:ok, net} <- Ethereumex.HttpClient.net_version()
+    do
+      %Information{
+        Information.new() |
+          name: config[:name],
+          contact: config[:contact],
+          coinbase: coinbase,
+          protocol: String.to_integer(protocol),
+          node: node,
+          net: net
+      }
+    else
+      _error -> Information.new()
+    end
   end
 
   defmodule Client do
