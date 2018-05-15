@@ -1,6 +1,7 @@
 # POAAgent
 
 [![Coverage Status](https://coveralls.io/repos/github/poanetwork/poa-netstats-agent/badge.svg?branch=master)](https://coveralls.io/github/poanetwork/poa-netstats-agent?branch=master)
+[![codecov](https://codecov.io/gh/poanetwork/poa-netstats-agent/branch/master/graph/badge.svg)](https://codecov.io/gh/poanetwork/poa-netstats-agent)
 
 **TODO: Add description**
 
