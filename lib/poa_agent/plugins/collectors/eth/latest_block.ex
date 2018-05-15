@@ -5,6 +5,8 @@ defmodule POAAgent.Plugins.Collectors.Eth.LatestBlock do
   This is a Collector's Plugin which makes requests to a Ethereum node in order to know if
   a new block has been added.
 
+  It also sends the history when the plugin starts.
+
   This Collector needs the url of the node to iteract. That url must be placed in the args field 
   in the config file. For example:
 
@@ -23,7 +25,17 @@ defmodule POAAgent.Plugins.Collectors.Eth.LatestBlock do
   def init_collector(args) do
     :ok = config(args)
 
-    {:ok, %{last_block: get_latest_block()}}
+    with block_number <- get_latest_block(),
+         {:ok, block} <- Ethereumex.HttpClient.eth_get_block_by_number(block_number, :false)
+    do
+      block = format_block(block)
+      range = history_range(block, 0)
+      history = history(range)
+
+      {:transfer, [block, history], %{last_block: get_latest_block()}}
+    else
+      _error -> {:ok, %{last_block: get_latest_block()}}
+    end
   end
 
   @doc false
@@ -34,9 +46,9 @@ defmodule POAAgent.Plugins.Collectors.Eth.LatestBlock do
         {:notransfer, state}
       ^latest_block ->
         {:notransfer, state}
-      latest_block ->
-        {:ok, block} = Ethereumex.HttpClient.eth_get_block_by_number(latest_block, :false)
-        {:transfer, format_block(block), %{state | last_block: latest_block}}
+      block_number ->
+        {:ok, block} = Ethereumex.HttpClient.eth_get_block_by_number(block_number, :false)
+        {:transfer, format_block(block), %{state | last_block: block_number}}
     end
   end
 
@@ -44,6 +56,19 @@ defmodule POAAgent.Plugins.Collectors.Eth.LatestBlock do
   @spec terminate(internal_state()) :: :ok
   def terminate(_state) do
     :ok
+  end
+
+  @doc false
+  def history(range) do
+    history = for i <- range do
+      block_number = "0x" <> Integer.to_string(i, 16)
+      {:ok, block} = Ethereumex.HttpClient.eth_get_block_by_number(block_number, :false)
+      format_block(block)
+    end
+
+    %POAAgent.Entity.Ethereum.History{
+      history: Enum.reverse(history)
+    }
   end
 
   @doc false
@@ -61,7 +86,7 @@ defmodule POAAgent.Plugins.Collectors.Eth.LatestBlock do
   end
 
   @doc false
-  defp format_block(block) do
+  defp format_block(block) when is_map(block) do
     difficulty = POAAgent.Format.Literal.Hex.decimalize(block["difficulty"])
     gas_limit = String.to_integer(POAAgent.Format.Literal.Hex.decimalize(block["gasLimit"]))
     gas_used = String.to_integer(POAAgent.Format.Literal.Hex.decimalize(block["gasUsed"]))
@@ -93,6 +118,18 @@ defmodule POAAgent.Plugins.Collectors.Eth.LatestBlock do
       transactions_root: block["transactionsRoot"],
       uncles: block["uncles"]
     }
+  end
+  defp format_block(_) do
+    nil
+  end
+
+  defp history_range(block, last_block) do
+    max_blocks_history = 40
+
+    from = Enum.max([block.number - max_blocks_history, last_block + 1])
+    to = Enum.max([block.number, 0])
+
+    from..to
   end
 
 end

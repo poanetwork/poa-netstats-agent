@@ -40,16 +40,22 @@ defmodule POAAgent.Plugins.Transfers.WebSocket.Primus do
     {:ok, %{client: client, context: context}}
   end
 
-  def data_received(label, data, %{client: client, context: context} = state) do
+  def data_received(label, data, %{client: client, context: context} = state) when is_list(data) do
     require Logger
     Logger.info("Received data from the collector referenced by label: #{label}.")
 
-    event = data
-    |> Primus.encode(context)
-    |> Jason.encode!()
-    :ok = Primus.Client.send(client, event)
+    :ok = Enum.each(data, fn(message) ->
+      event =
+      message
+      |> Primus.encode(context)
+      |> Jason.encode!()
+      :ok = Primus.Client.send(client, event)
+    end)
 
     {:ok, state}
+  end
+  def data_received(label, data, state) do
+    data_received(label, [data], state)
   end
 
   def handle_message(:ping, %{client: client, context: context} = state) do
@@ -99,11 +105,24 @@ defmodule POAAgent.Plugins.Transfers.WebSocket.Primus do
     |> POAAgent.Format.PrimusEmitter.wrap(event: "stats")
   end
 
-  def encode(x, %Primus.State{identifier: i}) do
+  def encode(%POAAgent.Entity.Ethereum.History{} = x, %Primus.State{identifier: i}) do
+    history = for i <- x.history do
+      Entity.NameConvention.from_elixir_to_node(i)
+    end
+
     %{}
     |> Map.put(:id, i)
-    |> Map.put(:history, x)
+    |> Map.put(:history, history)
     |> POAAgent.Format.PrimusEmitter.wrap(event: "history")
+  end
+
+  def encode(%POAAgent.Entity.Ethereum.Pending{} = x, %Primus.State{identifier: i}) do
+    x = Entity.NameConvention.from_elixir_to_node(x)
+
+    %{}
+    |> Map.put(:id, i)
+    |> Map.put(:stats, x)
+    |> POAAgent.Format.PrimusEmitter.wrap(event: "pending")
   end
 
   def information() do
@@ -167,6 +186,23 @@ defmodule POAAgent.Plugins.Transfers.WebSocket.Primus do
       |> Map.put(:id, context.identifier)
       |> Map.put(:latency, latency)
       |> POAAgent.Format.PrimusEmitter.wrap(event: "latency")
+      |> Jason.encode!()
+
+      {:reply, {:text, event}, state}
+    end
+    defp handle_primus_event(["history", %{"max" => max, "min" => min}], state) do
+      context = struct!(Primus.State, Application.get_env(:poa_agent, Primus))
+
+      h = POAAgent.Plugins.Collectors.Eth.LatestBlock.history(min..max)
+
+      history = for i <- h.history do
+        Entity.NameConvention.from_elixir_to_node(i)
+      end
+
+      event = %{}
+      |> Map.put(:id, context.identifier)
+      |> Map.put(:history, history)
+      |> POAAgent.Format.PrimusEmitter.wrap(event: "history")
       |> Jason.encode!()
 
       {:reply, {:text, event}, state}
