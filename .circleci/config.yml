@@ -18,3 +18,4 @@ jobs:
       - run: mix test
       - run: mix credo
       - run: mix dialyzer
+      - run: env MIX_ENV=test mix coveralls.circle
