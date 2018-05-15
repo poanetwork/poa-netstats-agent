@@ -30,7 +30,8 @@ defmodule POAAgent.Entity.Ethereum.Statistics do
         gas_price: :gasPrice,
         syncing?: :syncing
       ]
-      Enum.reduce(mapping, x, &POAAgent.Entity.Name.change/2)
+      x = Enum.reduce(mapping, x, &POAAgent.Entity.Name.change/2)
+      Map.from_struct(x)
     end
   end
 end

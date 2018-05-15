@@ -64,7 +64,8 @@ defmodule POAAgent.Entity.Ethereum.Block do
         total_difficulty: :totalDifficulty,
         transactions_root: :transactionsRoot
       ]
-      Enum.reduce(mapping, x, &POAAgent.Entity.Name.change/2)
+      x = Enum.reduce(mapping, x, &POAAgent.Entity.Name.change/2)
+      Map.from_struct(x)
     end
   end
 end
