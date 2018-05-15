@@ -22,6 +22,8 @@ defmodule POAAgent.Plugins.Transfers.WebSocket.Primus do
     ]
   end
 
+  @ping_frequency 3_000
+
   def init_transfer(_) do
     context = struct!(Primus.State, Application.get_env(:poa_agent, Primus))
     state = nil
@@ -32,6 +34,8 @@ defmodule POAAgent.Plugins.Transfers.WebSocket.Primus do
     |> Primus.encode(context)
     |> Jason.encode!()
     :ok = Primus.Client.send(client, event)
+
+    set_ping_timer()
 
     {:ok, %{client: client, context: context}}
   end
@@ -44,6 +48,21 @@ defmodule POAAgent.Plugins.Transfers.WebSocket.Primus do
     |> Primus.encode(context)
     |> Jason.encode!()
     :ok = Primus.Client.send(client, event)
+
+    {:ok, state}
+  end
+
+  def handle_message(:ping, %{client: client, context: context} = state) do
+
+    event = %{}
+    |> Map.put(:id, context.identifier)
+    |> Map.put(:clientTime, POAAgent.Utils.system_time())
+    |> POAAgent.Format.PrimusEmitter.wrap(event: "node-ping")
+    |> Jason.encode!()
+
+    :ok = Primus.Client.send(client, event)
+
+    set_ping_timer()
 
     {:ok, state}
   end
@@ -109,6 +128,10 @@ defmodule POAAgent.Plugins.Transfers.WebSocket.Primus do
     end
   end
 
+  defp set_ping_timer() do
+    Process.send_after(self(), :ping, @ping_frequency)
+  end
+
   defmodule Client do
     @moduledoc false
 
@@ -122,10 +145,36 @@ defmodule POAAgent.Plugins.Transfers.WebSocket.Primus do
       WebSockex.start_link(address, __MODULE__, state)
     end
 
+    def handle_frame({:text, event}, state) do
+      event = Jason.decode!(event)
+
+      handle_primus_event(event["emit"], state)
+    end
     def handle_frame({_type, _msg} = frame, state) do
       require Logger
 
       Logger.info("got an unexpected frame: #{inspect frame}")
+      {:ok, state}
+    end
+
+    defp handle_primus_event(["node-pong", data], state) do
+      context = struct!(Primus.State, Application.get_env(:poa_agent, Primus))
+
+      now = POAAgent.Utils.system_time()
+      latency = Float.ceil((now - data["clientTime"]) / 2)
+
+      event = %{}
+      |> Map.put(:id, context.identifier)
+      |> Map.put(:latency, latency)
+      |> POAAgent.Format.PrimusEmitter.wrap(event: "latency")
+      |> Jason.encode!()
+
+      {:reply, {:text, event}, state}
+    end
+    defp handle_primus_event(data, state) do
+      require Logger
+
+      Logger.info("got an unexpected message: #{inspect data}")
       {:ok, state}
     end
   end

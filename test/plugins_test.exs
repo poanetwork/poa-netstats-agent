@@ -39,6 +39,10 @@ defmodule POAAgent.PluginsTest do
         {:ok, :no_state}
       end
 
+      def handle_message(_, state) do
+        {:ok, state}
+      end
+
       def terminate(_state) do
         :ok
       end
@@ -46,7 +50,6 @@ defmodule POAAgent.PluginsTest do
 
     assert Transfer1.init(%{args: :args}) == {:ok, %{internal_state: :no_state, args: :args}}
     assert Transfer1.handle_call(:msg, :from, :state) == {:noreply, :state}
-    assert Transfer1.handle_info(:msg, :state) == {:noreply, :state}
     assert Transfer1.handle_cast(:msg, :state) == {:noreply, :state}
     assert Transfer1.code_change(:old, :state, :extra) == {:ok, :state}
     assert Transfer1.terminate(:reason, :state) == :ok
@@ -82,6 +85,10 @@ defmodule POAAgent.PluginsTest do
       def data_received(label, data, test_pid) do
         send test_pid, {:received, self(), label, data}
         {:ok, test_pid}
+      end
+
+      def handle_message(_, state) do
+        {:ok, state}
       end
 
       def terminate(_state) do
