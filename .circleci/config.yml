@@ -11,13 +11,20 @@ jobs:
     working_directory: ~/repo
     steps:
       - checkout
-
       - run: mix local.hex --force
       - run: mix local.rebar --force
       - run: mix deps.get
       - run: mix test
       - run: mix credo
+      - restore_cache:
+          keys:
+            - dialyzer-PLT-cache-{{ checksum "mix.exs" }}
+            - dialyzer-PLT-cache
       - run: mix dialyzer
+      - save_cache:
+          key: dialyzer-PLT-cache-{{ checksum "mix.exs" }}
+          paths:
+            - _build
       - run: env MIX_ENV=test mix coveralls.circle
       - run: env MIX_ENV=test mix coveralls.json
       - run: bash <(curl -s https://codecov.io/bash)
