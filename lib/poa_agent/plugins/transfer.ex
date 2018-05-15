@@ -33,6 +33,7 @@ defmodule POAAgent.Plugins.Transfer do
 
   - `init_transfer/1`: Called only once when the process starts
   - `data_received/2`: This function is called every time a Collector sends metrics to the Transfer
+  - `handle_message/1`: This is called when the transfer process receives an Erlang message
   - `terminate/1`: Called just before stopping the process
 
   This is a simple example of custom Transfer Plugin
@@ -77,6 +78,13 @@ defmodule POAAgent.Plugins.Transfer do
   @callback data_received(label :: atom(), data :: any(), state :: any()) :: {:ok, any()}
 
   @doc """
+    In this callback is called when the Transfer process receives an erlang message.
+
+    It must return `{:ok, state}`.
+  """
+  @callback handle_message(msg :: any(), state :: any()) :: {:ok, state :: any()}
+
+  @doc """
     This callback is called just before the Process goes down. This is a good place for closing connections.
   """
   @callback terminate(state :: term()) :: term()
@@ -103,8 +111,9 @@ defmodule POAAgent.Plugins.Transfer do
       end
 
       @doc false
-      def handle_info(_msg, state) do
-        {:noreply, state}
+      def handle_info(msg, state) do
+        {:ok, internal_state} = handle_message(msg, state.internal_state)
+        {:noreply, %{state | internal_state: internal_state}}
       end
 
       @doc false
