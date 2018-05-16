@@ -25,6 +25,8 @@ defmodule POAAgent.Plugins.Transfers.WebSocket.Primus do
   @ping_frequency 3_000
 
   def init_transfer(_) do
+    false = Process.flag(:trap_exit, true)
+
     context = struct!(Primus.State, Application.get_env(:poa_agent, Primus))
     state = nil
     address = Map.fetch!(context, :address)
@@ -71,6 +73,21 @@ defmodule POAAgent.Plugins.Transfers.WebSocket.Primus do
     set_ping_timer()
 
     {:ok, state}
+  end
+
+  def handle_message({:EXIT, client, {:remote, :closed}}, %{client: client, context: context} = state) do
+    :timer.sleep(8 * 1000)
+
+    address = Map.fetch!(context, :address)
+    {:ok, client} = Primus.Client.start_link(address, nil)
+
+    event = information()
+    |> Primus.encode(context)
+    |> Jason.encode!()
+
+    :ok = Primus.Client.send(client, event)    
+    
+    {:ok, %{state | client: client}}
   end
 
   def terminate(_) do
@@ -207,11 +224,22 @@ defmodule POAAgent.Plugins.Transfers.WebSocket.Primus do
 
       {:reply, {:text, event}, state}
     end
+    defp handle_primus_event(["history", false], state) do
+      epoch = 20
+      {:ok, num} = Ethereumex.HttpClient.eth_block_number()
+      num = String.to_integer(POAAgent.Format.Literal.Hex.decimalize(num))
+      {:reply, {:text, event}, state} = handle_primus_event(["history", %{"max" => num, "min" => num - epoch}], state)
+      {:reply, {:text, event}, state}
+    end
     defp handle_primus_event(data, state) do
       require Logger
 
       Logger.info("got an unexpected message: #{inspect data}")
       {:ok, state}
     end
+
+    # def terminate(_, _) do
+    #   exit(:normal)
+    # end
   end
 end
