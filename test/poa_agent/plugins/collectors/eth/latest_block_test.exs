@@ -1,16 +1,82 @@
 defmodule POAAgent.Plugins.Collectors.Eth.LatestBlockTest do
   use ExUnit.Case
+
+  alias POAAgent.Plugins.Collectors.Eth.LatestBlock
+  alias POAAgent.Entity.Ethereum.Block
+
   import Mock
 
-  test "latest block sent to the transfer" do
+  defmodule EchoTransfer do
+    use POAAgent.Plugins.Transfer
+
+    def init_transfer(caller) do
+      {:ok, caller}
+    end
+
+    def data_received(label, data, caller) do
+      send(caller, {label, data})
+      {:ok, caller}
+    end
+
+    def handle_message(_, state) do
+      {:ok, state}
+    end
+
+    def terminate(_state) do
+      :ok
+    end
+  end
+
+  test "sending history to the transfer when Collector starts" do
+    echo_transfer = :echo_transfer
+    start_echo_transfer(echo_transfer)
+
+    args = %{
+      name: :eth_latest_block,
+      transfers: [echo_transfer],
+      frequency: 1000,
+      label: :my_metrics,
+      args: [url: "http://localhost:8545"]
+    }
+
     with_mock Ethereumex.HttpClient, [
         eth_get_block_by_number: fn(_, _) -> {:ok, ethereumex_block()} end,
-        eth_block_number: fn() -> {:ok, 0} end
+        eth_block_number: fn() -> {:ok, "0x1"} end
       ] do
+      {:ok, _pid} = LatestBlock.start_link(args)
+      expected_block = expected_block()
 
-      {:transfer, block, _} = POAAgent.Plugins.Collectors.Eth.LatestBlock.collect(%{last_block: 1})
-      assert block == expected_block()
+      assert_receive {:my_metrics, [^expected_block, %POAAgent.Entity.Ethereum.History{}]}, 20_000
     end
+  end
+
+  test "sending latest block to the transfer after Collector start" do
+    echo_transfer = :echo_transfer
+    start_echo_transfer(echo_transfer)
+
+    args = %{
+      name: :eth_latest_block,
+      transfers: [echo_transfer],
+      frequency: 1000,
+      label: :my_metrics,
+      args: [url: "http://localhost:8545"]
+    }
+
+    {:ok, _pid} = LatestBlock.start_link(args)
+
+    with_mock Ethereumex.HttpClient, [
+        eth_get_block_by_number: fn(_, _) -> {:ok, ethereumex_block()} end,
+        eth_block_number: fn() -> {:ok, "0x1"} end
+      ] do
+      expected_block = expected_block()
+
+      assert_receive {:my_metrics, ^expected_block}, 20_000
+    end
+  end
+
+  defp start_echo_transfer(name) do
+    {:ok, pid} = EchoTransfer.start_link(%{name: name, args: self()})
+    pid
   end
 
   defp ethereumex_block() do
@@ -38,7 +104,7 @@ defmodule POAAgent.Plugins.Collectors.Eth.LatestBlockTest do
   end
 
   defp expected_block() do
-    %POAAgent.Entity.Ethereum.Block{
+    %Block{
       author: "0xdf9c9701e434c5c9f755ef8af18d6a4336550206",
       difficulty: "340282366920938463463374607431768211453",
       extra_data: "0xd583010a008650617269747986312e32342e31826c69",
@@ -62,4 +128,5 @@ defmodule POAAgent.Plugins.Collectors.Eth.LatestBlockTest do
       uncles: []
     }
   end
+
 end
