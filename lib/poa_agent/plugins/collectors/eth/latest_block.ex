@@ -32,7 +32,7 @@ defmodule POAAgent.Plugins.Collectors.Eth.LatestBlock do
       range = history_range(block, 0)
       history = history(range)
 
-      {:transfer, [block, history], %{last_block: get_latest_block()}}
+      {:transfer, [block, history], %{last_block: block_number}}
     else
       _error -> {:ok, %{last_block: get_latest_block()}}
     end
