@@ -6,30 +6,9 @@ defmodule POAAgent.Plugins.Collectors.Eth.LatestBlockTest do
 
   import Mock
 
-  defmodule EchoTransfer do
-    use POAAgent.Plugins.Transfer
-
-    def init_transfer(caller) do
-      {:ok, caller}
-    end
-
-    def data_received(label, data, caller) do
-      send(caller, {label, data})
-      {:ok, caller}
-    end
-
-    def handle_message(_, state) do
-      {:ok, state}
-    end
-
-    def terminate(_state) do
-      :ok
-    end
-  end
-
   test "sending history to the transfer when Collector starts" do
     echo_transfer = :echo_transfer
-    start_echo_transfer(echo_transfer)
+    {:ok, _echo} = EchoTransfer.start(echo_transfer)
 
     args = %{
       name: :eth_latest_block,
@@ -52,7 +31,7 @@ defmodule POAAgent.Plugins.Collectors.Eth.LatestBlockTest do
 
   test "sending latest block to the transfer after Collector start" do
     echo_transfer = :echo_transfer
-    start_echo_transfer(echo_transfer)
+    {:ok, _echo} = EchoTransfer.start(echo_transfer)
 
     args = %{
       name: :eth_latest_block,
@@ -72,11 +51,6 @@ defmodule POAAgent.Plugins.Collectors.Eth.LatestBlockTest do
 
       assert_receive {:my_metrics, ^expected_block}, 20_000
     end
-  end
-
-  defp start_echo_transfer(name) do
-    {:ok, pid} = EchoTransfer.start_link(%{name: name, args: self()})
-    pid
   end
 
   defp ethereumex_block() do
