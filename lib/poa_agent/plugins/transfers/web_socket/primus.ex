@@ -9,6 +9,7 @@ defmodule POAAgent.Plugins.Transfers.WebSocket.Primus do
   alias POAAgent.Plugins.Transfers.WebSocket.Primus
 
   alias POAAgent.Entity.Host.Information
+  alias POAAgent.Plugins.Collectors.Eth.LatestBlock
 
   defmodule State do
     @moduledoc false
@@ -171,6 +172,8 @@ defmodule POAAgent.Plugins.Transfers.WebSocket.Primus do
   defmodule Client do
     @moduledoc false
 
+    alias POAAgent.Entity.Ethereum.Block
+
     use WebSockex
 
     def send(handle, message) do
@@ -210,7 +213,7 @@ defmodule POAAgent.Plugins.Transfers.WebSocket.Primus do
     defp handle_primus_event(["history", %{"max" => max, "min" => min}], state) do
       context = struct!(Primus.State, Application.get_env(:poa_agent, Primus))
 
-      h = POAAgent.Plugins.Collectors.Eth.LatestBlock.history(min..max)
+      h = LatestBlock.history(min..max)
 
       history = for i <- h.history do
         Entity.NameConvention.from_elixir_to_node(i)
@@ -225,10 +228,11 @@ defmodule POAAgent.Plugins.Transfers.WebSocket.Primus do
       {:reply, {:text, event}, state}
     end
     defp handle_primus_event(["history", false], state) do
-      epoch = 20
-      {:ok, num} = Ethereumex.HttpClient.eth_block_number()
-      num = String.to_integer(POAAgent.Format.Literal.Hex.decimalize(num))
-      {:reply, {:text, event}, state} = handle_primus_event(["history", %{"max" => num, "min" => num - epoch}], state)
+      {:ok, block_number} = Ethereumex.HttpClient.eth_block_number()
+      {:ok, block} = Ethereumex.HttpClient.eth_get_block_by_number(block_number, :false)
+      block = Block.format_block(block)
+      min..max = LatestBlock.history_range(block, 0)
+      {:reply, {:text, event}, state} = handle_primus_event(["history", %{"max" => max, "min" => min}], state)
       {:reply, {:text, event}, state}
     end
     defp handle_primus_event(data, state) do
