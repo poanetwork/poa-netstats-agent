@@ -1,0 +1,6 @@
+{
+  "skip_files": [
+    "lib/poa_agent/plugins/collector.ex",
+    "lib/poa_agent/plugins/transfer.ex"
+  ]
+}
