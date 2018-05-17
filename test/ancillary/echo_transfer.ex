@@ -1,4 +1,6 @@
 defmodule EchoTransfer do
+  @moduledoc false
+
   use POAAgent.Plugins.Transfer
 
   def start(name) do
