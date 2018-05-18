@@ -36,7 +36,6 @@ defmodule POAAgent.Plugins.Transfers.WebSocket.Primus do
     false = Process.flag(:trap_exit, true)
     state = struct(Primus.State, configuration)
     set_connection_attempt_timer(0)
-    IO.puts("inside init_transfere :)")
     {:ok, state}
   end
 
@@ -45,14 +44,14 @@ defmodule POAAgent.Plugins.Transfers.WebSocket.Primus do
     {:ok, state}
   end
 
-  def data_received(label, data, %{client: client, context: context} = state) when is_list(data) do
+  def data_received(label, data, %{client: client} = state) when is_list(data) do
     require Logger
     Logger.info("Received data from the collector referenced by label: #{label}.")
 
     :ok = Enum.each(data, fn(message) ->
       event =
       message
-      |> Primus.encode(context)
+      |> Primus.encode(state)
       |> Jason.encode!()
       :ok = Primus.Client.send(client, event)
     end)
@@ -66,46 +65,39 @@ defmodule POAAgent.Plugins.Transfers.WebSocket.Primus do
 
   def handle_message(:attempt_to_connect, state) do
     address = Map.fetch!(state, :address)
-    case Primus.Client.start_link(address) do
+    case Primus.Client.start_link(address, state) do
       {:ok, client} ->
-        IO.puts("attempt to connect succeeded")
         set_up_and_send_hello(client, state)
-        IO.puts("between 73")
         ping_timer_ref = set_ping_timer()
-        |> Process.read_timer()
-        |> IO.inspect()
-        IO.puts("between 75")
-        x = %{state | connected?: true, client: client, current_backoff: 1, ping_timer_ref: ping_timer_ref}
-        IO.inspect(x)
         {:ok, %{state | connected?: true, client: client, current_backoff: 1, ping_timer_ref: ping_timer_ref}}
       {:error, reason} ->
-        IO.puts("attempt to connect failed")
         Logger.warn("Connection refused because: #{inspect reason}")
-        new_backoff = backoff(state.current_backoff, @backoff_ceiling)
-        set_connection_attempt_timer(new_backoff)
-        {:ok, %{state | connected?: false, current_backoff: new_backoff, client: nil}}
+        {:ok, %{state | connected?: false, client: nil}}
     end
   end
 
-  def handle_message(:ping, %{client: client, context: context} = state) do
-    IO.puts("got a ping message")
+  def handle_message(:ping, %{client: client} = state) do
     event = %{}
-    |> Map.put(:id, context.identifier)
+    |> Map.put(:id, state.identifier)
     |> Map.put(:clientTime, POAAgent.Utils.system_time())
     |> POAAgent.Format.PrimusEmitter.wrap(event: "node-ping")
     |> Jason.encode!()
 
     :ok = Primus.Client.send(client, event)
 
-    set_ping_timer()
+    ping_timer_ref = set_ping_timer()
 
-    {:ok, state}
+    {:ok, %{state | ping_timer_ref: ping_timer_ref}}
   end
 
   def handle_message({:EXIT, _pid, _reason}, state) do
-    Process.cancel_timer(state.ping_timer_ref)
-    set_connection_attempt_timer(0)
-    {:ok, %{state | connected?: false}}
+    case state.ping_timer_ref do
+      nil -> :continue
+      _ -> Process.cancel_timer(state.ping_timer_ref)
+    end
+    new_backoff = backoff(state.current_backoff, @backoff_ceiling)
+    set_connection_attempt_timer(new_backoff)
+    {:ok, %{state | current_backoff: new_backoff + 1, connected?: false, client: nil}}
   end
 
   def terminate(_) do
@@ -199,17 +191,15 @@ defmodule POAAgent.Plugins.Transfers.WebSocket.Primus do
     end
   end
 
-  defp set_up_and_send_hello(client, context) do
+  defp set_up_and_send_hello(client, state) do
     event = information()
-    |> Primus.encode(context)
+    |> Primus.encode(state)
     |> Jason.encode!()
     :ok = Primus.Client.send(client, event)
-    IO.puts("set up and sent hello was done")
   end
 
   defmodule Client do
     @moduledoc false
-    @max_backoff 16
 
     alias POAAgent.Entity.Ethereum.Block
 
@@ -217,33 +207,6 @@ defmodule POAAgent.Plugins.Transfers.WebSocket.Primus do
 
     def send(handle, message) do
       WebSockex.send_frame(handle, {:text, message})
-    end
-
-    def attempt_connection(address) do
-      attempt_connection(address, :backoff.init(1, @max_backoff))
-    end
-
-    defp attempt_connection(address, attempt_state) do
-      if :backoff.get(attempt_state) === @max_backoff do
-        {:error, :too_many_failed_attempts}
-      else
-        :timer.sleep(:backoff.get(attempt_state) * 1000)
-        case start_link(address, nil) do
-
-          {:ok, _client} = result ->
-            result
-
-          {:error, reason} ->
-            Logger.warn("Could not connect over WebSocket: #{inspect reason}")
-            {_, attempt_state} = :backoff.fail(attempt_state)
-            attempt_connection(address, attempt_state)
-
-        end
-      end
-    end
-
-    def start_link(address) do
-      start_link(address, nil)
     end
 
     def start_link(address, state) do
@@ -263,13 +226,10 @@ defmodule POAAgent.Plugins.Transfers.WebSocket.Primus do
     end
 
     defp handle_primus_event(["node-pong", data], state) do
-      context = struct!(Primus.State, Application.get_env(:poa_agent, Primus))
-
       now = POAAgent.Utils.system_time()
       latency = Float.ceil((now - data["clientTime"]) / 2)
-
       event = %{}
-      |> Map.put(:id, context.identifier)
+      |> Map.put(:id, state.identifier)
       |> Map.put(:latency, latency)
       |> POAAgent.Format.PrimusEmitter.wrap(event: "latency")
       |> Jason.encode!()
@@ -277,7 +237,6 @@ defmodule POAAgent.Plugins.Transfers.WebSocket.Primus do
       {:reply, {:text, event}, state}
     end
     defp handle_primus_event(["history", %{"max" => max, "min" => min}], state) do
-      context = struct!(Primus.State, Application.get_env(:poa_agent, Primus))
 
       h = LatestBlock.history(min..max)
 
@@ -286,7 +245,7 @@ defmodule POAAgent.Plugins.Transfers.WebSocket.Primus do
       end
 
       event = %{}
-      |> Map.put(:id, context.identifier)
+      |> Map.put(:id, state.identifier)
       |> Map.put(:history, history)
       |> POAAgent.Format.PrimusEmitter.wrap(event: "history")
       |> Jason.encode!()
