@@ -50,7 +50,7 @@ defmodule POAAgent.Plugins.Transfer do
           {:ok, :no_state}
         end
 
-        def handle_message(_message, state) doe
+        def handle_message(_message, state) do
           {:ok, state}
         end
 
