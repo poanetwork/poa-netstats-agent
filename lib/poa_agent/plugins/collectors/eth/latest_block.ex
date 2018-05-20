@@ -72,11 +72,16 @@ defmodule POAAgent.Plugins.Collectors.Eth.LatestBlock do
 
   @doc false
   def history(range) do
-    history = for i <- range do
-      block_number = "0x" <> Integer.to_string(i, 16)
-      {:ok, block} = Ethereumex.HttpClient.eth_get_block_by_number(block_number, :false)
-      Block.format_block(block)
-    end
+    history =
+      try do
+        for i <- range do
+          block_number = "0x" <> Integer.to_string(i, 16)
+          {:ok, block} = Ethereumex.HttpClient.eth_get_block_by_number(block_number, :false)
+          Block.format_block(block)
+        end
+      catch
+        _, _ -> []
+      end
 
     %POAAgent.Entity.Ethereum.History{
       history: Enum.reverse(history)
