@@ -216,7 +216,9 @@ defmodule POAAgent.Plugins.Transfers.WebSocket.Primus do
   end
 
   defp set_up_and_send_hello(client, state) do
-    event = information(state)
+    event = 
+    state
+    |> information()
     |> encode(state)
     |> Jason.encode!()
     :ok = Primus.Client.send(client, event)
