@@ -76,6 +76,13 @@ defmodule POAAgent.Plugins.Collectors.Eth.PrimusTest do
       :ok = send_to_transfer(:primus_dashboard, :my_metrics, last_block_message())
 
       assert_receive "{\"emit\":[\"block\"" <> _, 20_000
+      assert_receive "{\"emit\":[\"history\"" <> _, 20_000
+
+      # send a second block won't send the history
+      :ok = send_to_transfer(:primus_dashboard, :my_metrics, last_block_message())
+
+      assert_receive "{\"emit\":[\"block\"" <> _, 20_000
+      refute_receive "{\"emit\":[\"history\"" <> _, 20_000
     end
   end
 
@@ -172,17 +179,6 @@ defmodule POAAgent.Plugins.Collectors.Eth.PrimusTest do
       ] do
       message = "{\"emit\":[\"history\",{\"max\":5,\"min\":1}]}"
       
-      {:reply, {:text, "{\"emit\":[\"history\"" <> _}, _} = Primus.Client.handle_frame({:text, message}, %{identifier: 1})
-    end
-  end
-
-  test "handle {history, false} message from the dashboard" do
-    with_mock Ethereumex.HttpClient, [
-        eth_block_number: fn() -> {:ok, "0x1"} end,
-        eth_get_block_by_number: fn(_, _) -> {:ok, ethereumex_block()} end
-      ] do
-      message = "{\"emit\":[\"history\",false]}"
-
       {:reply, {:text, "{\"emit\":[\"history\"" <> _}, _} = Primus.Client.handle_frame({:text, message}, %{identifier: 1})
     end
   end
