@@ -50,6 +50,44 @@ defmodule POAAgent.Entity.Ethereum.Block do
     :uncles
   ]
 
+  @doc false
+  def format_block(block) when is_map(block) do
+    difficulty = POAAgent.Format.Literal.Hex.decimalize(block["difficulty"])
+    gas_limit = String.to_integer(POAAgent.Format.Literal.Hex.decimalize(block["gasLimit"]))
+    gas_used = String.to_integer(POAAgent.Format.Literal.Hex.decimalize(block["gasUsed"]))
+    number = String.to_integer(POAAgent.Format.Literal.Hex.decimalize(block["number"]))
+    size = String.to_integer(POAAgent.Format.Literal.Hex.decimalize(block["size"]))
+    timestamp = String.to_integer(POAAgent.Format.Literal.Hex.decimalize(block["timestamp"]))
+    total_difficulty = POAAgent.Format.Literal.Hex.decimalize(block["totalDifficulty"])
+
+    %POAAgent.Entity.Ethereum.Block{
+      author: block["author"],
+      difficulty: difficulty,
+      extra_data: block["extraData"],
+      gas_limit: gas_limit,
+      gas_used: gas_used,
+      hash: block["hash"],
+      miner: block["miner"],
+      number: number,
+      parent_hash: block["parentHash"],
+      receipts_root: block["receiptsRoot"],
+      seal_fields: block["sealFields"],
+      sha3_uncles: block["sha3Uncles"],
+      signature: block["signature"],
+      size: size,
+      state_root: block["stateRoot"],
+      step: block["step"],
+      timestamp: timestamp,
+      total_difficulty: total_difficulty,
+      transactions: block["transactions"],
+      transactions_root: block["transactionsRoot"],
+      uncles: block["uncles"]
+    }
+  end
+  def format_block(_) do
+    nil
+  end
+
   defimpl POAAgent.Entity.NameConvention do
     def from_elixir_to_node(x) do
       mapping = [

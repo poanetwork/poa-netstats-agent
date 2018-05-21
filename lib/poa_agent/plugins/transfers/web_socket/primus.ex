@@ -9,68 +9,95 @@ defmodule POAAgent.Plugins.Transfers.WebSocket.Primus do
   alias POAAgent.Plugins.Transfers.WebSocket.Primus
 
   alias POAAgent.Entity.Host.Information
+  alias POAAgent.Plugins.Collectors.Eth.LatestBlock
+
+  require Logger
 
   defmodule State do
     @moduledoc false
 
     defstruct [
-      :address,
-      :identifier,
-      :name,
-      :secret,
-      :contact
+      address: nil,
+      identifier: nil,
+      name: nil,
+      secret: nil,
+      contact: nil,
+      connected?: false,
+      current_backoff: 1,
+      client: nil,
+      ping_timer_ref: nil
     ]
   end
 
   @ping_frequency 3_000
+  @backoff_ceiling 32
 
-  def init_transfer(_) do
-    context = struct!(Primus.State, Application.get_env(:poa_agent, Primus))
-    state = nil
-    address = Map.fetch!(context, :address)
-    {:ok, client} = Primus.Client.start_link(address, state)
-
-    event = information()
-    |> Primus.encode(context)
-    |> Jason.encode!()
-    :ok = Primus.Client.send(client, event)
-
-    set_ping_timer()
-
-    {:ok, %{client: client, context: context}}
+  def init_transfer(configuration) do
+    false = Process.flag(:trap_exit, true)
+    state = struct(Primus.State, configuration)
+    set_connection_attempt_timer(0)
+    {:ok, state}
   end
 
-  def data_received(label, data, %{client: client, context: context} = state) when is_list(data) do
+  def data_received(_, _, %{connected?: false} = state) do
+    IO.puts("for some reason we seem to be connected")
+    {:ok, state}
+  end
+
+  def data_received(label, data, %{client: client} = state) when is_list(data) do
     require Logger
     Logger.info("Received data from the collector referenced by label: #{label}.")
 
     :ok = Enum.each(data, fn(message) ->
       event =
       message
-      |> Primus.encode(context)
+      |> Primus.encode(state)
       |> Jason.encode!()
       :ok = Primus.Client.send(client, event)
     end)
 
     {:ok, state}
   end
+
   def data_received(label, data, state) do
     data_received(label, [data], state)
   end
 
-  def handle_message(:ping, %{client: client, context: context} = state) do
+  def handle_message(:attempt_to_connect, state) do
+    address = Map.fetch!(state, :address)
+    case Primus.Client.start_link(address, state) do
+      {:ok, client} ->
+        set_up_and_send_hello(client, state)
+        ping_timer_ref = set_ping_timer()
+        {:ok, %{state | connected?: true, client: client, current_backoff: 1, ping_timer_ref: ping_timer_ref}}
+      {:error, reason} ->
+        Logger.warn("Connection refused because: #{inspect reason}")
+        {:ok, %{state | connected?: false, client: nil}}
+    end
+  end
 
+  def handle_message(:ping, %{client: client} = state) do
     event = %{}
-    |> Map.put(:id, context.identifier)
+    |> Map.put(:id, state.identifier)
     |> Map.put(:clientTime, POAAgent.Utils.system_time())
     |> POAAgent.Format.PrimusEmitter.wrap(event: "node-ping")
     |> Jason.encode!()
 
     :ok = Primus.Client.send(client, event)
 
-    set_ping_timer()
+    ping_timer_ref = set_ping_timer()
 
-    {:ok, state}
+    {:ok, %{state | ping_timer_ref: ping_timer_ref}}
+  end
+
+  def handle_message({:EXIT, _pid, _reason}, state) do
+    case state.ping_timer_ref do
+      nil -> :continue
+      _ -> Process.cancel_timer(state.ping_timer_ref)
+    end
+    new_backoff = backoff(state.current_backoff, @backoff_ceiling)
+    set_connection_attempt_timer(new_backoff)
+    {:ok, %{state | current_backoff: new_backoff + 1, connected?: false, client: nil}}
   end
 
   def terminate(_) do
@@ -151,8 +178,30 @@ defmodule POAAgent.Plugins.Transfers.WebSocket.Primus do
     Process.send_after(self(), :ping, @ping_frequency)
   end
 
+  defp set_connection_attempt_timer(backoff_time) do
+    Process.send_after(self(), :attempt_to_connect, backoff_time * 1000)
+  end
+
+  defp backoff(backoff, ceiling) do
+    case (:math.pow(2, backoff) - 1) do
+      result when result > ceiling ->
+        ceiling
+      next_backoff ->
+        round(next_backoff)
+    end
+  end
+
+  defp set_up_and_send_hello(client, state) do
+    event = information()
+    |> Primus.encode(state)
+    |> Jason.encode!()
+    :ok = Primus.Client.send(client, event)
+  end
+
   defmodule Client do
     @moduledoc false
+
+    alias POAAgent.Entity.Ethereum.Block
 
     use WebSockex
 
@@ -177,13 +226,10 @@ defmodule POAAgent.Plugins.Transfers.WebSocket.Primus do
     end
 
     defp handle_primus_event(["node-pong", data], state) do
-      context = struct!(Primus.State, Application.get_env(:poa_agent, Primus))
-
       now = POAAgent.Utils.system_time()
       latency = Float.ceil((now - data["clientTime"]) / 2)
-
       event = %{}
-      |> Map.put(:id, context.identifier)
+      |> Map.put(:id, state.identifier)
       |> Map.put(:latency, latency)
       |> POAAgent.Format.PrimusEmitter.wrap(event: "latency")
       |> Jason.encode!()
@@ -191,20 +237,27 @@ defmodule POAAgent.Plugins.Transfers.WebSocket.Primus do
       {:reply, {:text, event}, state}
     end
     defp handle_primus_event(["history", %{"max" => max, "min" => min}], state) do
-      context = struct!(Primus.State, Application.get_env(:poa_agent, Primus))
 
-      h = POAAgent.Plugins.Collectors.Eth.LatestBlock.history(min..max)
+      h = LatestBlock.history(min..max)
 
       history = for i <- h.history do
         Entity.NameConvention.from_elixir_to_node(i)
       end
 
       event = %{}
-      |> Map.put(:id, context.identifier)
+      |> Map.put(:id, state.identifier)
       |> Map.put(:history, history)
       |> POAAgent.Format.PrimusEmitter.wrap(event: "history")
       |> Jason.encode!()
 
+      {:reply, {:text, event}, state}
+    end
+    defp handle_primus_event(["history", false], state) do
+      {:ok, block_number} = Ethereumex.HttpClient.eth_block_number()
+      {:ok, block} = Ethereumex.HttpClient.eth_get_block_by_number(block_number, :false)
+      block = Block.format_block(block)
+      min..max = LatestBlock.history_range(block, 0)
+      {:reply, {:text, event}, state} = handle_primus_event(["history", %{"max" => max, "min" => min}], state)
       {:reply, {:text, event}, state}
     end
     defp handle_primus_event(data, state) do

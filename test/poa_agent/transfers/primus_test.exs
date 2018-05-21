@@ -11,7 +11,7 @@ defmodule POAAgent.Plugins.Collectors.Eth.PrimusTest do
   import Mock
 
   test "sending the Hello & Ping messages" do
-    args = %{name: :primus_dashboard, args: :no_args}
+    args = %{name: :primus_dashboard, args: []}
     test_pid = self()
 
     with_mocks([
@@ -40,7 +40,7 @@ defmodule POAAgent.Plugins.Collectors.Eth.PrimusTest do
   end
 
   test "sending the stats message" do
-    args = %{name: :primus_dashboard, args: :no_args}
+    args = %{name: :primus_dashboard, args: []}
     test_pid = self()
 
     with_mock WebSockex, [
@@ -52,6 +52,7 @@ defmodule POAAgent.Plugins.Collectors.Eth.PrimusTest do
       ] do
       {:ok, _pid} = Primus.start_link(args)
 
+      Process.sleep(500)
       :ok = send_to_transfer(:primus_dashboard, :my_metrics, stats_message())
 
       assert_receive "{\"emit\":[\"stats\"" <> _, 20_000
@@ -59,7 +60,7 @@ defmodule POAAgent.Plugins.Collectors.Eth.PrimusTest do
   end
 
   test "sending the last block message" do
-    args = %{name: :primus_dashboard, args: :no_args}
+    args = %{name: :primus_dashboard, args: []}
     test_pid = self()
 
     with_mock WebSockex, [
@@ -71,6 +72,7 @@ defmodule POAAgent.Plugins.Collectors.Eth.PrimusTest do
       ] do
       {:ok, _pid} = Primus.start_link(args)
 
+      Process.sleep(500)
       :ok = send_to_transfer(:primus_dashboard, :my_metrics, last_block_message())
 
       assert_receive "{\"emit\":[\"block\"" <> _, 20_000
@@ -78,7 +80,7 @@ defmodule POAAgent.Plugins.Collectors.Eth.PrimusTest do
   end
 
   test "sending the history message" do
-    args = %{name: :primus_dashboard, args: :no_args}
+    args = %{name: :primus_dashboard, args: []}
     test_pid = self()
 
     with_mock WebSockex, [
@@ -90,6 +92,7 @@ defmodule POAAgent.Plugins.Collectors.Eth.PrimusTest do
       ] do
       {:ok, _pid} = Primus.start_link(args)
 
+      Process.sleep(500)
       :ok = send_to_transfer(:primus_dashboard, :my_metrics, history_message())
 
       assert_receive "{\"emit\":[\"history\"" <> _, 20_000
@@ -97,7 +100,7 @@ defmodule POAAgent.Plugins.Collectors.Eth.PrimusTest do
   end
 
   test "sending the pending trx message" do
-    args = %{name: :primus_dashboard, args: :no_args}
+    args = %{name: :primus_dashboard, args: []}
     test_pid = self()
 
     with_mock WebSockex, [
@@ -109,16 +112,58 @@ defmodule POAAgent.Plugins.Collectors.Eth.PrimusTest do
       ] do
       {:ok, _pid} = Primus.start_link(args)
 
+      Process.sleep(500)
       :ok = send_to_transfer(:primus_dashboard, :my_metrics, pending_message())
 
       assert_receive "{\"emit\":[\"pending\"" <> _, 20_000
     end
   end
 
+  test "handle WS reconnections when connection breaks" do
+    args = %{name: :primus_dashboard, args: []}
+    test_pid = self()
+
+    with_mock WebSockex, [
+        send_frame: fn(to, {:text, message}) ->
+          send(to, message)
+          :ok
+        end,
+        start_link: fn(_, _, _) -> {:ok, test_pid} end
+      ] do
+      {:ok, primus_pid} = Primus.start_link(args)
+
+      Process.sleep(500)
+      send(primus_pid, {:EXIT, :pid, :econnrefused})
+
+      assert_receive "{\"emit\":[\"hello\"" <> _, 20_000
+      assert_receive "{\"emit\":[\"node-ping\"" <> _, 20_000
+    end
+  end
+
+  test "handle collector's messages when the Transfer is not connected to the Server" do
+    args = %{name: :primus_dashboard, args: []}
+    test_pid = self()
+
+    with_mock WebSockex, [
+        send_frame: fn(_, {:text, message}) ->
+          send(test_pid, message)
+          :ok
+        end,
+        start_link: fn(_, _, _) -> {:error, :econnrefused} end
+      ] do
+      {:ok, _pid} = Primus.start_link(args)
+
+      Process.sleep(500)
+      :ok = send_to_transfer(:primus_dashboard, :my_metrics, last_block_message())
+
+      refute_receive "{\"emit\":[\"block\"" <> _, 20_000
+    end
+  end
+
   test "handle pong message from the dashboard" do
     message = "{\"emit\":[\"node-pong\",{\"clientTime\":1526597561638,\"serverTime\":1526597561638}]}"
 
-    {:reply, {:text, "{\"emit\":[\"latency\"" <> _}, :state} = Primus.Client.handle_frame({:text, message}, :state)
+    {:reply, {:text, "{\"emit\":[\"latency\"" <> _}, _} = Primus.Client.handle_frame({:text, message}, %{identifier: 1})
   end
 
   test "handle history message from the dashboard" do
@@ -127,7 +172,18 @@ defmodule POAAgent.Plugins.Collectors.Eth.PrimusTest do
       ] do
       message = "{\"emit\":[\"history\",{\"max\":5,\"min\":1}]}"
       
-      {:reply, {:text, "{\"emit\":[\"history\"" <> _}, :state} = Primus.Client.handle_frame({:text, message}, :state)
+      {:reply, {:text, "{\"emit\":[\"history\"" <> _}, _} = Primus.Client.handle_frame({:text, message}, %{identifier: 1})
+    end
+  end
+
+  test "handle {history, false} message from the dashboard" do
+    with_mock Ethereumex.HttpClient, [
+        eth_block_number: fn() -> {:ok, "0x1"} end,
+        eth_get_block_by_number: fn(_, _) -> {:ok, ethereumex_block()} end
+      ] do
+      message = "{\"emit\":[\"history\",false]}"
+
+      {:reply, {:text, "{\"emit\":[\"history\"" <> _}, _} = Primus.Client.handle_frame({:text, message}, %{identifier: 1})
     end
   end
 
