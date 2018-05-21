@@ -43,7 +43,10 @@ defmodule POAAgent.MixProject do
       # Transfer
       {:websockex, "~> 0.4"},
       {:jason, "~> 1.0"},
-      {:backoff, "~> 1.1"}
+      {:backoff, "~> 1.1"},
+
+      # Releases
+      {:distillery, "~> 1.5", runtime: false}
     ]
   end
 
