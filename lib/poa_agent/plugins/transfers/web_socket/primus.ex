@@ -173,9 +173,7 @@ defmodule POAAgent.Plugins.Transfers.WebSocket.Primus do
     |> POAAgent.Format.PrimusEmitter.wrap(event: "pending")
   end
 
-  defp information() do
-    config = Application.get_env(:poa_agent, __MODULE__)
-
+  defp information(config) do
     with {:ok, coinbase} <- Ethereumex.HttpClient.eth_coinbase(),
          {:ok, protocol} <-  Ethereumex.HttpClient.eth_protocol_version(),
          {:ok, node} <- Ethereumex.HttpClient.web3_client_version(),
@@ -183,8 +181,8 @@ defmodule POAAgent.Plugins.Transfers.WebSocket.Primus do
     do
       %Information{
         Information.new() |
-          name: config[:name],
-          contact: config[:contact],
+          name: config.name,
+          contact: config.contact,
           coinbase: coinbase,
           protocol: String.to_integer(protocol),
           node: node,
@@ -194,8 +192,8 @@ defmodule POAAgent.Plugins.Transfers.WebSocket.Primus do
       _error ->
         %Information{
           Information.new() |
-            name: config[:name],
-            contact: config[:contact]
+            name: config.name,
+            contact: config.contact
         }
     end
   end
@@ -218,7 +216,9 @@ defmodule POAAgent.Plugins.Transfers.WebSocket.Primus do
   end
 
   defp set_up_and_send_hello(client, state) do
-    event = information()
+    event = 
+    state
+    |> information()
     |> encode(state)
     |> Jason.encode!()
     :ok = Primus.Client.send(client, event)
