@@ -49,6 +49,8 @@ defmodule POAAgent.Plugins.Collector do
              {:my_collector, [:my_transfer]}
            ]
 
+  ## Implementing A Collector Plugin
+
   In order to implement your Collector Plugin you must implement 3 functions.
 
   - `init_collector/1`: Called only once when the process starts
@@ -93,7 +95,7 @@ defmodule POAAgent.Plugins.Collector do
   @doc """
     In this callback is where the metrics collection logic must be placed.
     It must return `{:transfer, data, state}` where `data` is the retrieved metrics or
-    `{:notransfer, state} when for some reason we don't want to send data to the transfer int
+    `{:notransfer, state}` when for some reason we don't want to send data to the transfer int
     that moment
   """
   @callback collect(state :: any()) :: {:transfer, data :: any(), state :: any()}
