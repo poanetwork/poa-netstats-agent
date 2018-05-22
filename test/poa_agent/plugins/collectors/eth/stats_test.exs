@@ -126,6 +126,10 @@ defmodule POAAgent.Plugins.Collectors.Eth.StatsTest do
                     uptime: 100.0
                    }
 
+      ## The following message is sent when the agent starts up
+      assert_receive {:my_metrics, ^expected_stats}, 20_000
+      ## The following message is sent once the agent is already
+      ## started up
       assert_receive {:my_metrics, ^expected_stats}, 20_000
     end
   end
