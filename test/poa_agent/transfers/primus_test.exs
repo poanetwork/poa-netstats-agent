@@ -10,6 +10,13 @@ defmodule POAAgent.Plugins.Collectors.Eth.PrimusTest do
 
   import Mock
 
+  setup_all do
+    Application.put_env(:ethereumex, :url, "https://a.b.c:0000")
+    on_exit fn ->
+      Application.delete_env(:ethereumex, :url)
+    end
+  end
+
   test "sending the Hello & Ping messages" do
     args = %{name: :primus_dashboard, args: []}
     test_pid = self()
