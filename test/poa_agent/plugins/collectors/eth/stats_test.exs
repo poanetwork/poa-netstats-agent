@@ -94,6 +94,42 @@ defmodule POAAgent.Plugins.Collectors.Eth.StatsTest do
     end
   end
 
+  test "\'inactive\' stats sent to the transfer when Ethereum node is stopped" do
+    echo_transfer = :echo_transfer
+    {:ok, _echo} = EchoTransfer.start(echo_transfer)
+
+    args = %{
+      name: :eth_pending,
+      transfers: [echo_transfer],
+      frequency: 1000,
+      label: :my_metrics,
+      args: [url: "http://localhost:8545"]
+    }
+
+    error = {:error, ""}
+
+    with_mock Ethereumex.HttpClient, [
+      net_peer_count: fn() -> error end,
+      eth_mining: fn() -> error end,
+      eth_hashrate: fn() -> error end,
+      eth_syncing: fn() -> error end,
+      eth_gas_price: fn() -> error end
+    ] do
+
+      {:ok, _pid} = Stats.start_link(args)
+
+      expected_stats =
+        %Statistics{active?: false,
+                    mining?: false,
+                    hashrate: 0,
+                    peers: 0,
+                    uptime: 100.0
+                   }
+
+      assert_receive {:my_metrics, ^expected_stats}, 20_000
+    end
+  end
+
   def syncing() do
     %{
       "currentBlock" => "0x44ee0",
