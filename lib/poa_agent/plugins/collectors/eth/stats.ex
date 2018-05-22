@@ -29,7 +29,8 @@ defmodule POAAgent.Plugins.Collectors.Eth.Stats do
       {:ok, stats, tries, down} ->
         {:transfer, stats, %{last_stats: stats, tries: tries, down: down}}
       {:error, tries, down} ->
-        {:ok, %{last_stats: nil, tries: tries, down: down}}
+        stats = inactive_stats(tries, down)
+        {:transfer, stats, %{last_stats: nil, tries: tries, down: down}}
     end
   end
 
@@ -42,7 +43,8 @@ defmodule POAAgent.Plugins.Collectors.Eth.Stats do
       {:ok, stats, tries, down} ->
         {:transfer, stats, %{state | last_stats: stats, tries: tries, down: down}}
       {:error, tries, down} ->
-        {:notransfer, %{state | tries: tries, down: down}}
+        stats = inactive_stats(tries, down)
+        {:transfer, stats, %{last_stats: nil, tries: tries, down: down}}
     end
   end
 
@@ -96,8 +98,17 @@ defmodule POAAgent.Plugins.Collectors.Eth.Stats do
     end
   end
 
+  defp inactive_stats(tries, down) do
+    %POAAgent.Entity.Ethereum.Statistics{
+      active?: false,
+      mining?: false,
+      hashrate: 0,
+      peers: 0,
+      uptime: uptime(tries, down)
+    }
+  end
+
   defp uptime(tries, down) do
     ((tries - down) / tries) * 100
   end
-
 end
