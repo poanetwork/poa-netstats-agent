@@ -29,6 +29,8 @@ defmodule POAAgent.Plugins.Transfer do
   - `module`: Module which implements the Transfer behaviour
   - `args`: Initial args which will be passed to the `init_transfer/1` function
 
+  ## Implementing A Transfer Plugin
+
   In order to implement your Transfer Plugin you must implement 3 functions.
 
   - `init_transfer/1`: Called only once when the process starts

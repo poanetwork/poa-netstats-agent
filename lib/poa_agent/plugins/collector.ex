@@ -49,6 +49,8 @@ defmodule POAAgent.Plugins.Collector do
              {:my_collector, [:my_transfer]}
            ]
 
+  ## Implementing A Collector Plugin
+
   In order to implement your Collector Plugin you must implement 3 functions.
 
   - `init_collector/1`: Called only once when the process starts
