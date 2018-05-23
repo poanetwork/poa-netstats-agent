@@ -1,5 +1,8 @@
 use Mix.Config
 
+config :poa_agent,
+       config_file: "config/overlay.json"
+
 config :ethereumex,
     url: "http://localhost:8545"
 

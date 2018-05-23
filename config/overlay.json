@@ -1,0 +1,17 @@
+{
+   "POAAgent":{
+      "transfers":[
+         {
+            "id":"node_integration",
+            "module":"POAAgent.Plugins.Transfers.WebSocket.Primus",
+            "args":{
+               "address":"ws://localhost:3000/api",
+               "identifier":"elixirNodeJSIntegration",
+               "name":"Elixir-NodeJS-Integration",
+               "secret":"Fr00b5",
+               "contact":"mymail@mail.com"
+            }
+         }
+      ]
+   }
+}
