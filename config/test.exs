@@ -1,8 +1,5 @@
 use Mix.Config
 
-config :ethereumex,
-    url: "http://localhost:8545"
-
 # configuration for collectors. The format for each collector is {collector_process_id, module, label, args}
 config :poa_agent, 
        :collectors,
