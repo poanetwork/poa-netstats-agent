@@ -8,15 +8,7 @@ defmodule POAAgent.Plugins.Transfers.Supervisor do
   def init(:ok) do
     import Supervisor.Spec
 
-    # create the children from the config file
-    transfers = Application.get_env(:poa_agent, :transfers)
-    more = POAAgent.Configuration.get_config()
-    transfers = case more["POAAgent"]["transfers"] do
-                  [] ->
-                    transfers
-                  x when is_list(x) ->
-                    Enum.map(x, &POAAgent.Configuration.transform_transfer/1)
-                end
+    transfers = configure()
     children = for {name, module, args} <- transfers do
       worker(module, [%{name: name, args: args}])
     end
@@ -25,4 +17,10 @@ defmodule POAAgent.Plugins.Transfers.Supervisor do
     supervise(children, opts)
   end
 
+  defp configure do
+    old = Application.get_env(:poa_agent, :transfers)
+    more = POAAgent.Configuration.get_config_from_file()
+    new = POAAgent.Configuration.normalize(more)
+    POAAgent.Configuration.consolidate(old, new)
+  end
 end
