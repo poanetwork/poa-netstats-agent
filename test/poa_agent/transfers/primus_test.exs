@@ -39,6 +39,68 @@ defmodule POAAgent.Plugins.Collectors.Eth.PrimusTest do
     end
   end
 
+  @tag timeout: 500 + 60_500
+  test "sending the information (hello) messages more than once" do
+    args = %{name: :primus_dashboard, args: []}
+    test_pid = self()
+
+    with_mocks([
+      {WebSockex,
+       [],
+       [
+        send_frame: fn(to, {:text, message}) ->
+          send(to, message)
+          :ok
+        end,
+        start_link: fn(_, _, _) -> {:ok, test_pid} end
+        ]},
+      {Ethereumex.HttpClient,
+      [],
+      [
+        eth_coinbase: fn() -> {:ok, "0x0"} end,
+        eth_protocol_version: fn() -> {:ok, "15"} end,
+        web3_client_version: fn() -> {:ok, "0x0"} end,
+        net_version: fn() -> {:ok, "0x0"} end
+      ]}]) do
+      {:ok, _pid} = Primus.start_link(args)
+
+      delta = 500
+      assert_receive "{\"emit\":[\"hello\"" <> _, delta
+      assert_receive "{\"emit\":[\"hello\"" <> _, 60_000 + delta
+    end
+  end
+
+  @tag timeout: 500 + 60_500
+  test "information messages change to reflect node changes" do
+    args = %{name: :primus_dashboard, args: []}
+    test_pid = self()
+
+    with_mocks([
+      {WebSockex,
+       [],
+       [
+        send_frame: fn(to, {:text, message}) ->
+          send(to, message)
+          :ok
+        end,
+        start_link: fn(_, _, _) -> {:ok, test_pid} end
+        ]},
+      {Ethereumex.HttpClient,
+      [],
+      [
+        eth_coinbase: fn() -> {:ok, "0x0"} end,
+        eth_protocol_version: fn() -> {:ok, "15"} end,
+        web3_client_version: fn() -> {:ok, "0x0" <> Float.to_string(:rand.uniform())} end,
+        net_version: fn() -> {:ok, "0x0"} end
+      ]}]) do
+      {:ok, _pid} = Primus.start_link(args)
+
+      assert_receive x = "{\"emit\":[\"hello\"" <> _, :infinity
+      assert_receive y = "{\"emit\":[\"hello\"" <> _, :infinity
+      assert x != y
+    end
+  end
+
   test "sending the stats message" do
     args = %{name: :primus_dashboard, args: []}
     test_pid = self()
