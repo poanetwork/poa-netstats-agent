@@ -86,7 +86,8 @@ defmodule POAAgent.Plugins.Transfers.WebSocket.Primus do
     address = Map.fetch!(state, :address)
     case Primus.Client.start_link(address, state) do
       {:ok, client} ->
-        hello_timer_ref = set_hello_timer(seconds: 0)
+        set_up_and_send_hello(client, state)
+        hello_timer_ref = set_hello_timer(seconds: 60)
         ping_timer_ref = set_ping_timer()
 
         :ok = send_last_metrics(client, state)
