@@ -124,9 +124,13 @@ defmodule POAAgent.Plugins.Transfers.WebSocket.Primus do
       nil -> :continue
       _ -> Process.cancel_timer(state.ping_timer_ref)
     end
+    case state.hello_timer_ref do
+      nil -> :continue
+      _ -> Process.cancel_timer(state.hello_timer_ref)
+    end
     new_backoff = backoff(state.current_backoff, @backoff_ceiling)
     set_connection_attempt_timer(new_backoff)
-    {:ok, %{state | current_backoff: new_backoff + 1, connected?: false, client: nil}}
+    {:ok, %{state | current_backoff: new_backoff + 1, connected?: false, client: nil, ping_timer_ref: nil, hello_timer_ref: nil}}
   end
 
   def terminate(_) do
