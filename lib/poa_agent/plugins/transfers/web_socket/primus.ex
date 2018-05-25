@@ -34,6 +34,7 @@ defmodule POAAgent.Plugins.Transfers.WebSocket.Primus do
 
   @ping_frequency 3_000
   @backoff_ceiling 32
+  @hello_frequency 60
 
   def init_transfer(configuration) do
     false = Process.flag(:trap_exit, true)
@@ -87,7 +88,7 @@ defmodule POAAgent.Plugins.Transfers.WebSocket.Primus do
     case Primus.Client.start_link(address, state) do
       {:ok, client} ->
         set_up_and_send_hello(client, state)
-        hello_timer_ref = set_hello_timer(seconds: 60)
+        hello_timer_ref = set_hello_timer(seconds: @hello_frequency)
         ping_timer_ref = set_ping_timer()
 
         :ok = send_last_metrics(client, state)
@@ -115,7 +116,7 @@ defmodule POAAgent.Plugins.Transfers.WebSocket.Primus do
 
   def handle_message(:sample_and_send_hello, state) do
     set_up_and_send_hello(state.client, state)
-    hello_timer_ref = set_hello_timer(seconds: 60)
+    hello_timer_ref = set_hello_timer(seconds: @hello_frequency)
     {:ok, %{state | hello_timer_ref: hello_timer_ref}}
   end
 
