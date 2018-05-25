@@ -26,6 +26,7 @@ defmodule POAAgent.Plugins.Transfers.WebSocket.Primus do
       current_backoff: 1,
       client: nil,
       ping_timer_ref: nil,
+      hello_timer_ref: nil,
       last_block: nil,
       last_metrics: %{}
     ]
@@ -33,6 +34,7 @@ defmodule POAAgent.Plugins.Transfers.WebSocket.Primus do
 
   @ping_frequency 3_000
   @backoff_ceiling 32
+  @hello_frequency 60
 
   def init_transfer(configuration) do
     false = Process.flag(:trap_exit, true)
@@ -86,11 +88,12 @@ defmodule POAAgent.Plugins.Transfers.WebSocket.Primus do
     case Primus.Client.start_link(address, state) do
       {:ok, client} ->
         set_up_and_send_hello(client, state)
+        hello_timer_ref = set_hello_timer(seconds: @hello_frequency)
         ping_timer_ref = set_ping_timer()
 
         :ok = send_last_metrics(client, state)
 
-        {:ok, %{state | connected?: true, client: client, current_backoff: 1, ping_timer_ref: ping_timer_ref}}
+        {:ok, %{state | connected?: true, client: client, current_backoff: 1, ping_timer_ref: ping_timer_ref, hello_timer_ref: hello_timer_ref}}
       {:error, reason} ->
         Logger.warn("Connection refused because: #{inspect reason}")
         {:ok, %{state | connected?: false, client: nil}}
@@ -111,14 +114,24 @@ defmodule POAAgent.Plugins.Transfers.WebSocket.Primus do
     {:ok, %{state | ping_timer_ref: ping_timer_ref}}
   end
 
+  def handle_message(:sample_and_send_hello, state) do
+    set_up_and_send_hello(state.client, state)
+    hello_timer_ref = set_hello_timer(seconds: @hello_frequency)
+    {:ok, %{state | hello_timer_ref: hello_timer_ref}}
+  end
+
   def handle_message({:EXIT, _pid, _reason}, state) do
     case state.ping_timer_ref do
       nil -> :continue
       _ -> Process.cancel_timer(state.ping_timer_ref)
     end
+    case state.hello_timer_ref do
+      nil -> :continue
+      _ -> Process.cancel_timer(state.hello_timer_ref)
+    end
     new_backoff = backoff(state.current_backoff, @backoff_ceiling)
     set_connection_attempt_timer(new_backoff)
-    {:ok, %{state | current_backoff: new_backoff + 1, connected?: false, client: nil}}
+    {:ok, %{state | current_backoff: new_backoff + 1, connected?: false, client: nil, ping_timer_ref: nil, hello_timer_ref: nil}}
   end
 
   def terminate(_) do
@@ -204,6 +217,10 @@ defmodule POAAgent.Plugins.Transfers.WebSocket.Primus do
 
   defp set_connection_attempt_timer(backoff_time) do
     Process.send_after(self(), :attempt_to_connect, backoff_time * 1000)
+  end
+
+  defp set_hello_timer(seconds: s) do
+    Process.send_after(self(), :sample_and_send_hello, s * 1000)
   end
 
   defp backoff(backoff, ceiling) do
