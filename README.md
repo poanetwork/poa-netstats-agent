@@ -58,6 +58,41 @@ If you want to run it on the local host then the procedure is as simple as: `_bu
 **Note:** executables must be built on the platform (OS and architecture) they are destined for under the project's current configuration.
 Other options are possible (see `https://hexdocs.pm/distillery/getting-started.html`).
 
+## Configuration
+
+Executables are built with a configuration as described above.
+However the Primus/WebSocket transfer is configurable at run-time through a JSON configuration.
+To configure this supply a path to a JSON file with the `transfer_config_overlay` key/value.
+The following is an extract from [config/test.exs](config/test.exs):
+
+```Elixir
+config :poa_agent,
+    transfer_config_overlay: "config/transfer_overlay.json"
+```
+
+A corresponding example is provided in `config/transfer_overlay.json`:
+
+```JSON
+{
+    "POAAgent":{
+        "transfers":[
+            {
+                "id":"node_integration",
+                "address":"ws://localhost:3000/api",
+                "identifier":"elixirNodeJSIntegration",
+                "name":"Elixir-NodeJS-Integration",
+                "secret":"Fr00b5",
+                "contact":"a@b.c"
+            }
+        ]
+    }
+}
+
+```
+
+The file can reside anywhere on the machine that the Elixir executable has access to.
+The key/value pairs in the JSON configuration will replace the defaults specified in the Elixir configuration (i.e. `config/{dev,test,prod}.exs`).
+
 ## Coverage
 
 To get an HTML coverage report on your own machine try `env MIX_ENV=test mix coveralls.html` then open `cover/excoveralls.html`.

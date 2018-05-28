@@ -1,0 +1,14 @@
+{
+    "POAAgent":{
+        "transfers":[
+            {
+                "id":"node_integration",
+                "address":"ws://localhost:3000/api",
+                "identifier":"elixirNodeJSIntegration",
+                "name":"Elixir-NodeJS-Integration",
+                "secret":"Fr00b5",
+                "contact":"a@b.c"
+            }
+        ]
+    }
+}
