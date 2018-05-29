@@ -9,7 +9,7 @@ defmodule POAAgent.Plugins.Transfers.Supervisor do
     import Supervisor.Spec
 
     # create the children from the config file
-    transfers = Application.get_env(:poa_agent, :transfers)
+    transfers = POAAgent.Configuration.transfers()
 
     children = for {name, module, args} <- transfers do
       worker(module, [%{name: name, args: args}])
@@ -18,5 +18,4 @@ defmodule POAAgent.Plugins.Transfers.Supervisor do
     opts = [strategy: :one_for_one]
     supervise(children, opts)
   end
-
 end
