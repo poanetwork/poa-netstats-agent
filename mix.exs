@@ -30,6 +30,7 @@ defmodule POAAgent.MixProject do
   defp deps do
     [
       {:ethereumex, "~> 0.3"},
+      {:poison, "~> 3.1"},
 
       # Tests
       {:credo, "~> 0.9", only: [:dev, :test], runtime: false},
@@ -66,7 +67,8 @@ defmodule POAAgent.MixProject do
         "Ethereum Plugins": [
           POAAgent.Plugins.Collectors.Eth.LatestBlock,
           POAAgent.Plugins.Collectors.Eth.Stats,
-          POAAgent.Plugins.Collectors.Eth.Pending
+          POAAgent.Plugins.Collectors.Eth.Pending,
+          POAAgent.Plugins.Collectors.Eth.Information
         ]
       ]
     ]
