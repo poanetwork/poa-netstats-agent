@@ -33,7 +33,6 @@ defmodule POAAgent.Configuration do
       "secret",
       "contact"
     ]
-    POAAgent.Plugins.Transfers.WebSocket.Primus = module_name
     ^id = String.to_existing_atom(Map.fetch!(overlay, "id"))
     restricted = Map.take(overlay, keys)
     want = to_keyword(restricted)

@@ -1,6 +1,7 @@
 defmodule POAAgent.Entity.Ethereum.Block do
   @moduledoc false
   alias POAAgent.Format.Literal
+  alias POAAgent.Format.POAProtocol.Data
 
   @type t :: %__MODULE__{
     author: Literal.Hex.t(),
@@ -104,6 +105,12 @@ defmodule POAAgent.Entity.Ethereum.Block do
       ]
       x = Enum.reduce(mapping, x, &POAAgent.Entity.Name.change/2)
       Map.from_struct(x)
+    end
+  end
+
+  defimpl Data.Format do
+    def to_data(x) do
+      Data.new("block", x)
     end
   end
 end

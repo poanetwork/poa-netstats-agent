@@ -3,6 +3,7 @@ defmodule POAAgent.Plugins.Collectors.Eth.LatestBlockTest do
 
   alias POAAgent.Plugins.Collectors.Eth.LatestBlock
   alias POAAgent.Entity.Ethereum.Block
+  alias POAAgent.Entity.Ethereum.History
 
   import Mock
 
@@ -25,7 +26,7 @@ defmodule POAAgent.Plugins.Collectors.Eth.LatestBlockTest do
       {:ok, _pid} = LatestBlock.start_link(args)
       expected_block = expected_block()
 
-      assert_receive {:my_metrics, [^expected_block, %POAAgent.Entity.Ethereum.History{}]}, 20_000
+      assert_receive {:my_metrics, [^expected_block, %History{}]}, 20_000
     end
   end
 
@@ -49,7 +50,7 @@ defmodule POAAgent.Plugins.Collectors.Eth.LatestBlockTest do
       ] do
       expected_block = expected_block()
 
-      assert_receive {:my_metrics, ^expected_block}, 20_000
+      assert_receive {:my_metrics, [^expected_block, %History{}]}, 20_000
     end
   end
 

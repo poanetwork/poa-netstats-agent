@@ -1,6 +1,7 @@
 defmodule POAAgent.Entity.Host.Information do
   @moduledoc false
   alias POAAgent.Format.Literal
+  alias POAAgent.Format.POAProtocol.Data
 
   @type t :: %__MODULE__{
     name: String.t(),
@@ -77,6 +78,12 @@ defmodule POAAgent.Entity.Host.Information do
       ]
       x = Enum.reduce(mapping, x, &POAAgent.Entity.Name.change/2)
       Map.from_struct(x)
+    end
+  end
+
+  defimpl Data.Format do
+    def to_data(x) do
+      Data.new("information", x)
     end
   end
 end

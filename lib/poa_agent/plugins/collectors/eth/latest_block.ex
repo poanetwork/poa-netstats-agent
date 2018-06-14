@@ -50,7 +50,12 @@ defmodule POAAgent.Plugins.Collectors.Eth.LatestBlock do
         {:notransfer, state}
       block_number ->
         {:ok, block} = Ethereumex.HttpClient.eth_get_block_by_number(block_number, :false)
-        {:transfer, Block.format_block(block), %{state | last_block: block_number}}
+
+        block = Block.format_block(block)
+        range = history_range(block, 0)
+        history = history(range)
+  
+        {:transfer, [block, history], %{state | last_block: block_number}}
     end
   end
 
