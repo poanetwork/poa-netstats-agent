@@ -29,7 +29,7 @@ defmodule POAAgent.Transfers.RestTest do
       ]}]) do
       {:ok, _pid} = REST.start_link(args)
 
-      assert_receive {"localhost/latency", _}, 20_000
+      assert_receive {"localhost/data", "{\"data\":{\"body\":{\"latency\"" <> _}, 20_000
       assert_receive {"localhost/ping", _}, 20_000
     end
   end

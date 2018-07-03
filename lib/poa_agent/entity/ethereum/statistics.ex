@@ -3,6 +3,7 @@ defmodule POAAgent.Entity.Ethereum.Statistics do
 
   alias POAAgent.Format.Literal
   alias POAAgent.Format.POAProtocol.Data
+  alias POAAgent.Entity
 
   @type t :: %__MODULE__{
     active?: boolean,
@@ -39,6 +40,7 @@ defmodule POAAgent.Entity.Ethereum.Statistics do
 
   defimpl Data.Format do
     def to_data(x) do
+      x = Entity.NameConvention.from_elixir_to_node(x)
       Data.new("statistics", x)
     end
   end

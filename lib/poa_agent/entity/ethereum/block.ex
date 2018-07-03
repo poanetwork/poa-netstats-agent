@@ -2,6 +2,7 @@ defmodule POAAgent.Entity.Ethereum.Block do
   @moduledoc false
   alias POAAgent.Format.Literal
   alias POAAgent.Format.POAProtocol.Data
+  alias POAAgent.Entity
 
   @type t :: %__MODULE__{
     author: Literal.Hex.t(),
@@ -110,6 +111,7 @@ defmodule POAAgent.Entity.Ethereum.Block do
 
   defimpl Data.Format do
     def to_data(x) do
+      x = Entity.NameConvention.from_elixir_to_node(x)
       Data.new("block", x)
     end
   end

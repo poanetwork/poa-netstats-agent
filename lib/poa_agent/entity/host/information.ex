@@ -2,6 +2,7 @@ defmodule POAAgent.Entity.Host.Information do
   @moduledoc false
   alias POAAgent.Format.Literal
   alias POAAgent.Format.POAProtocol.Data
+  alias POAAgent.Entity
 
   @type t :: %__MODULE__{
     name: String.t(),
@@ -83,6 +84,7 @@ defmodule POAAgent.Entity.Host.Information do
 
   defimpl Data.Format do
     def to_data(x) do
+      x = Entity.NameConvention.from_elixir_to_node(x)
       Data.new("information", x)
     end
   end
