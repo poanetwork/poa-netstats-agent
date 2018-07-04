@@ -8,7 +8,7 @@ defmodule POAAgent.Plugins.Collectors.Eth.StatsTest do
 
   test "stats sent to the transfer when the collectors starts" do
     echo_transfer = :echo_transfer
-    {:ok, _echo} = EchoTransfer.start(echo_transfer)
+    _ = EchoTransfer.start(echo_transfer)
 
     args = %{
       name: :eth_pending,

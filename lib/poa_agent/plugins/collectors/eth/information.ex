@@ -33,12 +33,7 @@ defmodule POAAgent.Plugins.Collectors.Eth.Information do
   @doc false
   @spec collect(internal_state()) :: term()
   def collect(%{information: information, args: args} = state) do
-    case information(args) do
-      ^information ->
-        {:notransfer, state}
-      information ->
-        {:transfer, information, %{state | information: information}}
-    end
+    {:transfer, information(args), %{state | information: information}}
   end
 
   @doc false

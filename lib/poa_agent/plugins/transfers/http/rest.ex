@@ -5,6 +5,7 @@ defmodule POAAgent.Plugins.Transfers.HTTP.REST do
 
   alias __MODULE__
   alias POAAgent.Format.POAProtocol.Data
+  alias POAAgent.Entity.Host.Latency
 
   require Logger
 
@@ -62,7 +63,7 @@ defmodule POAAgent.Plugins.Transfers.HTTP.REST do
     case post(state.address <> url, event) do
       {:ok, %HTTPoison.Response{status_code: 200}} ->
         latency = (POAAgent.Utils.system_time() - before_ping) / 1
-        send_latency(state, latency)
+        send_latency(latency, state)
       {:ok, %HTTPoison.Response{status_code: error}} ->
         Logger.warn("Error sending a ping code #{inspect error}")
       {:error, %HTTPoison.Error{reason: reason}} ->
@@ -74,22 +75,18 @@ defmodule POAAgent.Plugins.Transfers.HTTP.REST do
     {:ok, %{state | ping_timer_ref: ping_timer_ref}}
   end
 
-  defp send_latency(state, latency) do
-    url = "/latency"
+  defp send_latency(latency, state) do
 
-    event = %{}
-      |> Map.put(:id, state.identifier)
-      |> Map.put(:secret, state.secret)
-      |> Map.put(:latency, latency)
-      |> Jason.encode!()
-
-      post(state.address <> url, event)
+    latency
+    |> Latency.new
+    |> send_metric(state)
   end
 
   defp send_metric(metric, state) do
     url = "/data"
 
-    data = metric
+    data =
+      metric
       |> Data.Format.to_data()
       |> Map.from_struct()
 
