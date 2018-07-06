@@ -54,11 +54,8 @@ defmodule POAAgent.MixProject do
   defp docs do
     [
       source_ref: "v#{@version}",
-      main: "POAAgent.Application",
       source_url: "https://github.com/poanetwork/poa-netstats-agent",
-      extras: [
-        "pages/initial_architecture.md"
-      ],
+      extras: ["pages/initial_architecture.md": [filename: "initial_architecture", title: "Initial Architecture"]],
       groups_for_modules: [
         "Plugins": [
           POAAgent.Plugins.Collector,

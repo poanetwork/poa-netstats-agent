@@ -1,0 +1,377 @@
+    <!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="generator" content="ExDoc v0.18.3">
+    <title>POAAgent.Plugins.Transfer – poa_agent v0.1.0</title>
+    <link rel="stylesheet" href="dist/app-480ffdc169.css" />
+    
+    <script src="dist/sidebar_items-d9b3f5cff8.js"></script>
+    
+    
+    
+    
+  </head>
+  <body data-type="modules">
+    <script>try { if(localStorage.getItem('night-mode')) document.body.className += ' night-mode'; } catch (e) { }</script>
+
+    <div class="main">
+<button class="sidebar-button sidebar-toggle">
+  <span class="icon-menu" aria-hidden="true"></span>
+  <span class="sr-only">Toggle Sidebar</span>
+</button>
+<button class="sidebar-button night-mode-toggle">
+  <span class="icon-theme" aria-hidden="true"></span>
+  <span class="sr-only">Toggle Theme</span>
+</button>
+<section class="sidebar">
+
+  
+  <a href="api-reference.html" class="sidebar-projectLink">
+    <div class="sidebar-projectDetails">
+      <h1 class="sidebar-projectName">
+        poa_agent
+      </h1>
+      <h2 class="sidebar-projectVersion">
+        v0.1.0
+      </h2>
+    </div>
+    
+  </a>
+
+  <form class="sidebar-search" action="search.html">
+    <button type="submit" class="search-button">
+      <span class="icon-search" aria-hidden="true"></span>
+    </button>
+    <input name="q" type="text" id="search-list" class="search-input" placeholder="Search" aria-label="Search" autocomplete="off" />
+  </form>
+
+  <ul class="sidebar-listNav">
+    <li><a id="extras-list" href="#full-list">Pages</a></li>
+
+    
+      <li><a id="modules-list" href="#full-list">Modules</a></li>
+    
+
+    
+
+    
+  </ul>
+  <div class="gradient"></div>
+  <ul id="full-list" class="sidebar-fullList"></ul>
+</section>
+
+<section class="content">
+  <div class="content-outer">
+    <div id="content" class="content-inner">
+
+
+      <h1>
+        <small class="visible-xs">poa_agent v0.1.0</small>
+        POAAgent.Plugins.Transfer <small>behaviour</small>
+        
+          <a href="https://github.com/poanetwork/poa-netstats-agent/blob/v0.1.0/lib/poa_agent/plugins/transfer.ex#L1" title="View Source" class="view-source" rel="help">
+            <span class="icon-code" aria-hidden="true"></span>
+            <span class="sr-only">View Source</span>
+          </a>
+        
+      </h1>
+
+      
+        <section id="moduledoc">
+          <p>Defines a Transfer Plugin.</p>
+<p>A Transfer plugin receives data from Collectors. It uses the Collector’s <code class="inline">label</code> in order to
+differenciate from multiple Collectors.</p>
+<p><code class="inline">POAAgent</code> app reads the Transfers configuration from the <code class="inline">config.exs</code> file when bootstrap and will create a
+process per each one of them. That configuration is referenced by :transfers key.</p>
+<pre><code class="elixir">config :poa_agent,
+   :transfers,
+   [
+     {name, module, args}
+   ]</code></pre>
+<p>for example</p>
+<pre><code class="elixir">config :poa_agent,
+   :transfers,
+   [
+     {:my_transfer, POAAgent.Plugins.Transfers.MyTransfer, [ws_key: &quot;mykey&quot;, other_stuff: &quot;hello&quot;]}
+   ]</code></pre>
+<p><code class="inline">name</code>, <code class="inline">module</code> and <code class="inline">args</code> must be defined in the configuration file.</p>
+<ul>
+<li><code class="inline">name</code>: Name for the new created process. Must be unique
+</li>
+<li><code class="inline">module</code>: Module which implements the Transfer behaviour
+</li>
+<li><code class="inline">args</code>: Initial args which will be passed to the <code class="inline">init_transfer/1</code> function
+</li>
+</ul>
+<h2 id="module-implementing-a-transfer-plugin" class="section-heading">
+  <a href="#module-implementing-a-transfer-plugin" class="hover-link"><span class="icon-link" aria-hidden="true"></span></a>
+  Implementing A Transfer Plugin
+</h2>
+
+<p>In order to implement your Transfer Plugin you must implement 3 functions.</p>
+<ul>
+<li><code class="inline">init_transfer/1</code>: Called only once when the process starts
+</li>
+<li><code class="inline">data_received/2</code>: This function is called every time a Collector sends metrics to the Transfer
+</li>
+<li><code class="inline">handle_message/1</code>: This is called when the transfer process receives an Erlang message
+</li>
+<li><code class="inline">terminate/1</code>: Called just before stopping the process
+</li>
+</ul>
+<p>This is a simple example of custom Transfer Plugin</p>
+<pre><code class="elixir">defmodule POAAgent.Plugins.Transfers.MyTransfer do
+  use POAAgent.Plugins.Transfer
+
+  def init_transfer(args) do
+    {:ok, :no_state}
+  end
+
+  def data_received(label, data, state) do
+    IO.puts &quot;Received data from the collector referenced by label&quot;
+    {:ok, :no_state}
+  end
+
+  def handle_message(_message, state) do
+    {:ok, state}
+  end
+
+  def terminate(_state) do
+    :ok
+  end
+
+end</code></pre>
+
+        </section>
+      
+
+      
+        <section id="summary" class="details-list">
+          <h1 class="section-heading">
+            <a class="hover-link" href="#summary">
+              <span class="icon-link" aria-hidden="true"></span>
+              <span class="sr-only">Link to this section</span>
+            </a>
+            Summary
+          </h1>
+          
+
+          
+
+          
+  <div class="summary-callbacks summary">
+    <h2>
+      <a href="#callbacks">Callbacks</a>
+    </h2>
+    <div class="summary-row">
+  <div class="summary-signature">
+    <a href="#c:data_received/3">data_received(label, data, state)</a>
+  </div>
+  
+    <div class="summary-synopsis"><p>In this callback is called when a Collector sends data to this Transfer</p>
+</div>
+  
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="#c:handle_message/2">handle_message(msg, state)</a>
+  </div>
+  
+    <div class="summary-synopsis"><p>In this callback is called when the Transfer process receives an erlang message</p>
+</div>
+  
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="#c:init_transfer/1">init_transfer(args)</a>
+  </div>
+  
+    <div class="summary-synopsis"><p>A callback executed when the Transfer Plugin starts.
+  The argument is retrieved from the configuration file when the Transfer is defined
+  It must return <code class="inline">{:ok, state}</code>, that <code class="inline">state</code> will be keept as in <a href="https://hexdocs.pm/elixir/GenServer.html"><code class="inline">GenServer</code></a> and can be
+  retrieved in the <code class="inline">data_received/2</code> function</p>
+</div>
+  
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="#c:terminate/1">terminate(state)</a>
+  </div>
+  
+    <div class="summary-synopsis"><p>This callback is called just before the Process goes down. This is a good place for closing connections</p>
+</div>
+  
+</div>
+
+  </div>
+
+
+        </section>
+      
+
+      
+
+      
+
+      
+        <section id="callbacks" class="details-list">
+          <h1 class="section-heading">
+            <a class="hover-link" href="#callbacks">
+              <span class="icon-link" aria-hidden="true"></span>
+              <span class="sr-only">Link to this section</span>
+            </a>
+            Callbacks
+          </h1>
+          <div class="detail" id="c:data_received/3">
+  
+  
+  <div class="detail-header">
+    <a href="#c:data_received/3" class="detail-link" title="Link to this callback">
+      <span class="icon-link" aria-hidden="true"></span>
+      <span class="sr-only">Link to this callback</span>
+    </a>
+    <span class="signature">data_received(label, data, state)</span>
+    
+      <a href="https://github.com/poanetwork/poa-netstats-agent/blob/v0.1.0/lib/poa_agent/plugins/transfer.ex#L84" class="view-source" rel="help" title="View Source">
+       <span class="icon-code" aria-hidden="true"></span>
+       <span class="sr-only">View Source</span>
+     </a>
+    
+    
+    
+      <div class="specs">
+        
+          <pre>data_received(label :: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>(), data :: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">any</a>(), state :: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">any</a>()) :: {:ok, <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">any</a>()}</pre>
+        
+      </div>
+    
+  </div>
+  <section class="docstring">
+    <p>  In this callback is called when a Collector sends data to this Transfer.</p>
+<p>  The data received is in <code class="inline">{label, data}</code> format where <code class="inline">label</code> identifies the Collector and the
+  data is the real data received.</p>
+<p>  It must return <code class="inline">{:ok, state}</code>.</p>
+
+  </section>
+</div>
+<div class="detail" id="c:handle_message/2">
+  
+  
+  <div class="detail-header">
+    <a href="#c:handle_message/2" class="detail-link" title="Link to this callback">
+      <span class="icon-link" aria-hidden="true"></span>
+      <span class="sr-only">Link to this callback</span>
+    </a>
+    <span class="signature">handle_message(msg, state)</span>
+    
+      <a href="https://github.com/poanetwork/poa-netstats-agent/blob/v0.1.0/lib/poa_agent/plugins/transfer.ex#L91" class="view-source" rel="help" title="View Source">
+       <span class="icon-code" aria-hidden="true"></span>
+       <span class="sr-only">View Source</span>
+     </a>
+    
+    
+    
+      <div class="specs">
+        
+          <pre>handle_message(msg :: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">any</a>(), state :: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">any</a>()) :: {:ok, state :: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">any</a>()}</pre>
+        
+      </div>
+    
+  </div>
+  <section class="docstring">
+    <p>  In this callback is called when the Transfer process receives an erlang message.</p>
+<p>  It must return <code class="inline">{:ok, state}</code>.</p>
+
+  </section>
+</div>
+<div class="detail" id="c:init_transfer/1">
+  
+  
+  <div class="detail-header">
+    <a href="#c:init_transfer/1" class="detail-link" title="Link to this callback">
+      <span class="icon-link" aria-hidden="true"></span>
+      <span class="sr-only">Link to this callback</span>
+    </a>
+    <span class="signature">init_transfer(args)</span>
+    
+      <a href="https://github.com/poanetwork/poa-netstats-agent/blob/v0.1.0/lib/poa_agent/plugins/transfer.ex#L73" class="view-source" rel="help" title="View Source">
+       <span class="icon-code" aria-hidden="true"></span>
+       <span class="sr-only">View Source</span>
+     </a>
+    
+    
+    
+      <div class="specs">
+        
+          <pre>init_transfer(args :: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>()) :: {:ok, <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">any</a>()}</pre>
+        
+      </div>
+    
+  </div>
+  <section class="docstring">
+    <p>  A callback executed when the Transfer Plugin starts.
+  The argument is retrieved from the configuration file when the Transfer is defined
+  It must return <code class="inline">{:ok, state}</code>, that <code class="inline">state</code> will be keept as in <a href="https://hexdocs.pm/elixir/GenServer.html"><code class="inline">GenServer</code></a> and can be
+  retrieved in the <code class="inline">data_received/2</code> function.</p>
+
+  </section>
+</div>
+<div class="detail" id="c:terminate/1">
+  
+  
+  <div class="detail-header">
+    <a href="#c:terminate/1" class="detail-link" title="Link to this callback">
+      <span class="icon-link" aria-hidden="true"></span>
+      <span class="sr-only">Link to this callback</span>
+    </a>
+    <span class="signature">terminate(state)</span>
+    
+      <a href="https://github.com/poanetwork/poa-netstats-agent/blob/v0.1.0/lib/poa_agent/plugins/transfer.ex#L96" class="view-source" rel="help" title="View Source">
+       <span class="icon-code" aria-hidden="true"></span>
+       <span class="sr-only">View Source</span>
+     </a>
+    
+    
+    
+      <div class="specs">
+        
+          <pre>terminate(state :: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>()) :: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>()</pre>
+        
+      </div>
+    
+  </div>
+  <section class="docstring">
+    <p>  This callback is called just before the Process goes down. This is a good place for closing connections.</p>
+
+  </section>
+</div>
+
+        </section>
+      
+          <footer class="footer">
+        <p>
+          <span class="line">
+            Built using
+            <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" rel="help" target="_blank">ExDoc</a> (v0.18.3),
+          </span>
+          <span class="line">
+            designed by
+            <a href="https://twitter.com/dignifiedquire" target="_blank" title="@dignifiedquire">Friedel Ziegelmayer</a>.
+            </span>
+        </p>
+      </footer>
+    </div>
+  </div>
+</section>
+</div>
+  <script src="dist/app-9bd040e5e5.js"></script>
+  
+  
+  
+  
+  </body>
+</html>
+
