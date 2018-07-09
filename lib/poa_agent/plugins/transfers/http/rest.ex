@@ -56,7 +56,7 @@ defmodule POAAgent.Plugins.Transfers.HTTP.REST do
     event = %{}
       |> Map.put(:id, state.identifier)
       |> Map.put(:secret, state.secret)
-      |> Jason.encode!()
+      |> Msgpax.pack!()
 
     before_ping = POAAgent.Utils.system_time()
 
@@ -96,13 +96,13 @@ defmodule POAAgent.Plugins.Transfers.HTTP.REST do
       |> Map.put(:secret, state.secret)
       |> Map.put(:type, "ethereum_metrics") # for now only ethereum_metrics
       |> Map.put(:data, data)
-      |> Jason.encode!()
+      |> Msgpax.pack!()
 
       post(state.address <> url, event)
   end
 
   defp post(address, event) do
-    HTTPoison.post(address, event, [{"Content-Type", "application/json"}])
+    HTTPoison.post(address, event, [{"Content-Type", "application/msgpack"}])
   end
 
   defp set_ping_timer() do

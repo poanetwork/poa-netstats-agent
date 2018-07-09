@@ -52,7 +52,7 @@ mix dialyzer
 To build an executable you'll need Elixir 1.6 (and Erlang/OTP 20).
 
 1. Once you have a copy of this repository configure the agent for production in the file `config/prod.exs`.
-2. An example configuration can be found in `config/test.exs`.
+2. An real configuration example can be found in the default `config/prod.exs`.
 3. Do a `mix deps.get` to fetch, among other dependencies, the tooling for building server executables.
 4. A `env MIX_ENV=prod mix release --name=poa_agent --env=prod` will assemble an executable.
 
