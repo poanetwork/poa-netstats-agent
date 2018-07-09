@@ -7,11 +7,17 @@
 
 ## Documentation
 
-In order to create the documentation
+- [Initial Architecture](pages/initial_architecture.md)
+- You can find the online documentation [here](https://rawgit.com/poanetwork/poa-netstats-agent/master/doc/index.html)
+
+Or you can build the documenation locally running
 
 ```
+mix deps.get
 mix docs
 ```
+
+That command will create a `doc/` folder with the actual Documentation.
 
 ## Run
 

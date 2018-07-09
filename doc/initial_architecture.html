@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="generator" content="ExDoc v0.18.3">
+    <title>Initial Architecture – poa_agent v0.1.0</title>
+    <link rel="stylesheet" href="dist/app-480ffdc169.css" />
+    
+    <script src="dist/sidebar_items-d9b3f5cff8.js"></script>
+    
+    
+    
+    
+  </head>
+  <body data-type="extras">
+    <script>try { if(localStorage.getItem('night-mode')) document.body.className += ' night-mode'; } catch (e) { }</script>
+
+<div class="main">
+<button class="sidebar-button sidebar-toggle">
+  <span class="icon-menu" aria-hidden="true"></span>
+  <span class="sr-only">Toggle Sidebar</span>
+</button>
+<button class="sidebar-button night-mode-toggle">
+  <span class="icon-theme" aria-hidden="true"></span>
+  <span class="sr-only">Toggle Theme</span>
+</button>
+<section class="sidebar">
+
+  
+  <a href="api-reference.html" class="sidebar-projectLink">
+    <div class="sidebar-projectDetails">
+      <h1 class="sidebar-projectName">
+        poa_agent
+      </h1>
+      <h2 class="sidebar-projectVersion">
+        v0.1.0
+      </h2>
+    </div>
+    
+  </a>
+
+  <form class="sidebar-search" action="search.html">
+    <button type="submit" class="search-button">
+      <span class="icon-search" aria-hidden="true"></span>
+    </button>
+    <input name="q" type="text" id="search-list" class="search-input" placeholder="Search" aria-label="Search" autocomplete="off" />
+  </form>
+
+  <ul class="sidebar-listNav">
+    <li><a id="extras-list" href="#full-list">Pages</a></li>
+
+    
+      <li><a id="modules-list" href="#full-list">Modules</a></li>
+    
+
+    
+
+    
+  </ul>
+  <div class="gradient"></div>
+  <ul id="full-list" class="sidebar-fullList"></ul>
+</section>
+
+<section class="content">
+  <div class="content-outer">
+    <div id="content" class="content-inner">
+
+
+<h1>POA Net Data App Architecture</h1>
+<p>POA Networks operates a public platform for smart contracts, including an open Ethereum sidechain with Proof of Authority (PoA) consensus by independent validators (including related governance/security considerations). The POA Network supports decentralized applications (DApps), including a service used to gather and process POA Network Data Application (“POA Net Data App”). This document outlines a draft architecture for an Elixir-based implementation of the POA Net Data App.</p>
+<!--ts--><ul>
+<li><p><a href="#summary-of-architecture">Summary of Architecture</a></p>
+<ul>
+<li><p><a href="#network-agent-architecture">Network Agent Architecture</a></p>
+<ul>
+<li><a href="#data-collection">Data Collection</a>
+</li>
+<li><a href="#data-transfer">Data Transfer</a>
+</li>
+</ul>
+</li>
+<li><p><a href="#network-server-architecture">Network Server Architecture</a></p>
+<ul>
+<li><a href="#data-aggregation">Data Aggregation</a>
+</li>
+<li><a href="#data-storage">Data Storage</a>
+</li>
+<li><a href="#data-reporting">Data Reporting</a>
+</li>
+<li><a href="#plugins">Plugins</a>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<!--te--><h1>Summary of Architecture</h1>
+<p>The PAO Net Data App, will be based on a client/server architecture. The network will continue to consist of decentralized group of agents running on client nodes which gather network data and statistics (“Network Agents”). In turn, this data and stats will be aggregated and stored in a time series database by a central server (“Network Server”), which will connect with a public-facing interface used to report these statistics configurable northbound APIs such as as proprietary dashboards, monitoring tools or SaaS services. This architecture will be implemented using Elixir best practices intended to eventually support 30,000 active agents, all sending data at regular intervals.</p>
+<p>This architecture is intended to ideally be implemented in a phased manner, allowing incremental development. The Agent will initially be implemented to interface with the existing Server; and subsequently, the existing Server will be replaced with an Elixir-based implementation. Once the Server implementation is completed, additional enhancements and new interfaces in both the Agent and the Server will be possible (see section 1.2.4). They could be standards such as StatsD, Syslog and SNMP or proprietary standards. Additional discovery will need to be done as to POA Network’s internal development workflow and tooling; however,
+Elixir offers deployment tooling which can ideally be implement in conjunction with or in lieu of existing tooling.</p>
+<p>Where and when possible, this architecture re-uses existing code/applications. For instance, it appears that the current public-facing reporting interface is written in AngularJS, which is presumably decoupled from the current Central Server NodeJS application. As such, this AngularJS application can ideally be re-used and configured to work with the Central Server Elixir application.</p>
+<h2 id="network-agent-architecture" class="section-heading">
+  <a href="#network-agent-architecture" class="hover-link"><span class="icon-link" aria-hidden="true"></span></a>
+  Network Agent Architecture
+</h2>
+
+<p>The initial implementation of the Architecture will involve replacing the existing
+Agent with a new Elixir-based solution. This implementation will take advantage of Elixir best
+practices to allow for a decoupled and distributed architecture with improved reliability and
+scalability (e.g,. reduced data loss and downtime); which can be further enhanced once the
+Server has been implemented.</p>
+<p>The Agent will gather, store and transmit a variety of network data, including both
+Ethereum Client statistics and other node data (e.g., cpu usage, memory, network, etc.) in the
+form of metrics, logs and alarms. The Agent will be architected to use separate Elixir modules^1
+which perform key functionality, including: data collection, temporary data storage, northbound
+data transfer, and application monitoring.</p>
+<h3 id="data-collection" class="section-heading">
+  <a href="#data-collection" class="hover-link"><span class="icon-link" aria-hidden="true"></span></a>
+  Data Collection
+</h3>
+
+<p>The most essential functionality of the Agent will be to collect data from the POA network (nodes. The Agent can be architected in a manner that allows for data of different format and sources to be collected concurrently. The agent can be extended to manage multiple industry standards such as Syslog, StatsD and SNMP, allowing it to be used with other tools, as well as proprietary APIs allowing it to efficiently interface the Server 1.1.2 Temporary Data Storage</p>
+<p>In the initial Agent implementation, data will initially be persisted in a local database native to Elixir/OTP (<a href="http://erlang.org/doc/man/mnesia.html">Mnesia</a>). This approach will address the data loss concern of intermittent network outages. Data can be removed either once it has been sent, or when the server acknowledges receipt, or on a configurable wrap around schedule so as to not fill up the hard drive.</p>
+<h3 id="data-transfer" class="section-heading">
+  <a href="#data-transfer" class="hover-link"><span class="icon-link" aria-hidden="true"></span></a>
+  Data Transfer
+</h3>
+
+<p>The initial implementation of the Agent will employ the existing protocol and API to expose the Data it has gathered/stored to the existing Server for aggregation and reporting. This approach will allow the existing NodeJS Central Server to continue to be used. The protocol and API will be implemented as a plugin, allowing others to be added.Once the Elixir-based Server is implemented, the Agent can be extended to use different upstream transfer of data.</p>
+<p>The Agent can continue to use WebSockets for communications where suitable. However, where appropriate, it can export different standards which point. For instance, with respect to <a href="https://en.wikipedia.org/wiki/Syslog#Network_protocol">logging data network protocol</a>, it is likely that Syslog sent over UDP is used. Similarly, to the extent that alarm/alert notifications are implemented, it’s likely that <a href="https://en.wikipedia.org/wiki/Simple_Network_Management_Protocol#Protocol_details">Simple Network Management Protocol (SNMP)</a> will be used. For metrics, StatsD is a common standard supported by many tools.</p>
+<h2 id="network-server-architecture" class="section-heading">
+  <a href="#network-server-architecture" class="hover-link"><span class="icon-link" aria-hidden="true"></span></a>
+  Network Server Architecture
+</h2>
+
+<p>This architecture contemplates that the Server App will be implemented either concurrently with or (more likely) subsequent to the implementation of the Agent. Much like the Agent, the Server will also leverage Elixir best practices to decouple key functionality within the application, and deliver improved performance, scalability, reliability, resilience, and fault tolerance. The Server will be architected to use separate Elixir modules which perform key functionality, including: data aggregation, data storage, data reporting, application monitoring, and application extensions (e.g., for analysis). The Server will initially implement a minimal multi-node architecture. In due course, that implementation can evolve as the network grows to implement a multi-tier node architecture and more advance distributed architecture patterns. The net result will be a “system that never stops”, and which can scale from the current dozens of nodes to the planned thousands of nodes.</p>
+<h3 id="data-aggregation" class="section-heading">
+  <a href="#data-aggregation" class="hover-link"><span class="icon-link" aria-hidden="true"></span></a>
+  Data Aggregation
+</h3>
+
+<p>The Server will be responsible for consuming Data from the Agent nodes on the network. This architecture will employ a consumer/producer model using Elixir tooling to implement with backpressure and load regulation(<a href="https://hexdocs.pm/gen_stage/GenStage.html">GenStage</a>, so as to ensure application availability and performance. As the network grows, this multi-node architecture can grow to permit aggregation of data from an essentially infinite number of Agent nodes on the network. As mentioned above, once both the Agent and Server have been implemented, the two can be tightly integrated to ensure the integrity of the data aggregation.</p>
+<h3 id="data-storage" class="section-heading">
+  <a href="#data-storage" class="hover-link"><span class="icon-link" aria-hidden="true"></span></a>
+  Data Storage
+</h3>
+
+<p>The data which is aggregated on the the Server will be persisted in a data store for purposes of reporting and analysis. The architecture will employ a lightweight wrapper around the datastore, so as to abstract which datastore is used and provide flexibility. It is likely that, at least initially, the architecture will use Elixir’s official database wrapper, <a href="https://hexdocs.pm/ecto/Ecto.html">Ecto</a>. While it’s possible that AWS DynamoDB could be used as a datastore (as mentioned in the <a href="https://github.com/poanetwork/RFC/issues/7">draft specifications</a>), the architecture will most likely recommend evaluating and selecting a Time Series Database and/or other datastore(s) which are best suited to the given functionality needed. The key objective of this aspect of the architecture is to decoupling the business logic from the persistence layer, so as to facilitate data/code portability, flexibility and maintainability.</p>
+<h3 id="data-reporting" class="section-heading">
+  <a href="#data-reporting" class="hover-link"><span class="icon-link" aria-hidden="true"></span></a>
+  Data Reporting
+</h3>
+
+<p>The proposed architecture will decouple the reporting dashboard from the data aggregation and storage functionality. As noted at the outset, this architecture will also aim to interface with and re-use the existing public-facing reporting application/dashboard, which appears to be implemented in AngularJS. Elixir provided excellent functionality to ensure that the data can be effectively retrieved from the datastore(s) and exposed to the reporting dashboard.</p>
+<h3 id="plugins" class="section-heading">
+  <a href="#plugins" class="hover-link"><span class="icon-link" aria-hidden="true"></span></a>
+  Plugins
+</h3>
+
+<p>We understand that plans exist to add additional functionality to the platform, much of which is currently a work in progress. As such, the proposed architecture contemplates abstracting such northbound API functionality into a series of modules that can service as “plug-ins” to extend the platform. This approach will expose data and/or other Elixir functionality as needed via these plugins (e.g., Grafana analytics/monitoring, further data analysis, etc.); and there is also potential for external developers to create plugins that could connect with the platform.</p>
+
+      <footer class="footer">
+        <p>
+          <span class="line">
+            Built using
+            <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" rel="help" target="_blank">ExDoc</a> (v0.18.3),
+          </span>
+          <span class="line">
+            designed by
+            <a href="https://twitter.com/dignifiedquire" target="_blank" title="@dignifiedquire">Friedel Ziegelmayer</a>.
+            </span>
+        </p>
+      </footer>
+    </div>
+  </div>
+</section>
+</div>
+  <script src="dist/app-9bd040e5e5.js"></script>
+  
+  
+  
+  
+  </body>
+</html>
+
