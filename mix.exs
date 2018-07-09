@@ -31,6 +31,7 @@ defmodule POAAgent.MixProject do
     [
       {:ethereumex, "~> 0.3"},
       {:poison, "~> 3.1"},
+      {:msgpax, "~> 2.1"},
 
       # Tests
       {:credo, "~> 0.9", only: [:dev, :test], runtime: false},
