@@ -9,7 +9,7 @@ defmodule POAAgent.Plugins.Transfers.Supervisor do
     import Supervisor.Spec
 
     # create the children from the config file
-    transfers = POAAgent.Configuration.transfers()
+    transfers = POAAgent.Configuration.Transfers.config()
     children = for {name, module, args} <- transfers do
       worker(module, [%{name: name, args: args}])
     end

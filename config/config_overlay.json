@@ -1,0 +1,14 @@
+{
+    "POAAgent":{
+        "collectors":[
+            {
+                "id":"eth_information"
+            }
+        ],
+        "transfers":[
+            {
+                "id":"rest_transfer"
+            }
+        ]
+    }
+}
