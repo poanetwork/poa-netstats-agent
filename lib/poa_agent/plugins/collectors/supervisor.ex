@@ -9,7 +9,7 @@ defmodule POAAgent.Plugins.Collectors.Supervisor do
     import Supervisor.Spec
 
     # create the children from the config file
-    collectors = Application.get_env(:poa_agent, :collectors)
+    collectors = POAAgent.Configuration.Collectors.config()
     mappings = Application.get_env(:poa_agent, :mappings)
 
     children = for {name, module, frequency, label, args} <- collectors do

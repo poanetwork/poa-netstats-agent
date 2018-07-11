@@ -73,22 +73,28 @@ The following is an extract from [config/test.exs](config/test.exs):
 
 ```Elixir
 config :poa_agent,
-    transfer_config_overlay: "config/transfer_overlay.json"
+    config_overlay: "config/config_overlay.json"
 ```
 
-A corresponding example is provided in `config/transfer_overlay.json`:
+A corresponding example is provided in `config/config_overlay.json`:
 
 ```JSON
 {
     "POAAgent":{
+        "collectors":[
+            {
+                "id": "eth_information",
+                "url": "http://localhost:8546",
+                "name": "NewNodeName",
+                "contact": "mynewemail@gmail.com"
+            }
+        ],
         "transfers":[
             {
-                "id":"node_integration",
-                "address":"ws://localhost:3000/api",
-                "identifier":"elixirNodeJSIntegration",
-                "name":"Elixir-NodeJS-Integration",
-                "secret":"Fr00b5",
-                "contact":"a@b.c"
+                "id": "rest_transfer",
+                "address": "http://localhost:4003",
+                "identifier": "NewIdentifier",
+                "secret": "newsecret"
             }
         ]
     }

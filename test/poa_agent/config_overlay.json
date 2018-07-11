@@ -1,0 +1,20 @@
+{
+    "POAAgent":{
+        "collectors":[
+            {
+                "id": "eth_information",
+                "url": "http://localhost:8546",
+                "name": "NewNodeName",
+                "contact": "mynewemail@gmail.com"
+            }
+        ],
+        "transfers":[
+            {
+                "id": "rest_transfer",
+                "address": "http://localhost:4003",
+                "identifier": "NewIdentifier",
+                "secret": "newsecret"
+            }
+        ]
+    }
+}
