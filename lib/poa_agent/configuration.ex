@@ -69,7 +69,7 @@ defmodule POAAgent.Configuration do
       |> merge_overlay_into_config(default)
     end
 
-    defp merge_overlay_into_config(overlay, [{id, module_name, freq, tag, default}]) do
+    defp merge_overlay_into_config(overlay, [{id, module_name, freq, tag, default} | rest]) do
       keys = [
         "url",
         "name",
@@ -79,7 +79,7 @@ defmodule POAAgent.Configuration do
       restricted = Map.take(overlay, keys)
       want = POAAgent.Configuration.to_keyword(restricted)
       final = Keyword.merge(default, want)
-      [{id, module_name, freq, tag, final}]
+      [{id, module_name, freq, tag, final}] ++ rest
     end
   end
 
