@@ -5,6 +5,8 @@ defmodule POAAgen.Plugins.Collectors.System.Metrics do
   Nice describe
   """
   def init_collector(_args) do
+    :application.start(:sasl)
+    :application.start(:os_mon)
     {:ok, :no_state}
   end
 
@@ -17,6 +19,12 @@ defmodule POAAgen.Plugins.Collectors.System.Metrics do
   end
 
   defp metrics() do
-    :erlang.memory()
+    unix_process = :cpu_sup.nprocs()
+    cpu_util = :cpu_sup.util()
+    disk_used = :disksup.get_almost_full_threshold()
+    list = [:os.type(), {:unix_process, unix_process}, {cpu_util, cpu_util},
+                        {disk_used, disk_used} ]
+    Enum.map(:memsup.get_system_memory_data() ++ list, fn {k, v} -> {k, v} end)
   end
+
 end
