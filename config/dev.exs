@@ -48,3 +48,8 @@ config :poa_agent,
          {:eth_pending, [:rest_transfer]}
          # {:eth_information, [:rest_transfer]}
        ]
+
+# configuration for metrics.
+config :poa_metrics,
+        :metrics,
+        []
