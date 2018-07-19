@@ -12,6 +12,7 @@ defmodule POAAgent.Entity.Host.Information do
     net: Literal.Decimal.t(),
     protocol: pos_integer,
     api: Version.t(),
+    ip: String.t(),
     port: Literal.Decimal.t(), ## :inet.port_number()
     os: String.t(),
     os_v: Version.t(),
@@ -27,6 +28,7 @@ defmodule POAAgent.Entity.Host.Information do
     :net,
     :protocol,
     :api,
+    :ip,
     :port,
     :os,
     :os_v,
@@ -43,12 +45,24 @@ defmodule POAAgent.Entity.Host.Information do
       net: nil,
       protocol: nil,
       api: "", # this field belongs to JS version, doesn't make sense here
+      ip: ip(),
       port: "", # TODO
       os: os(),
       os_v: os_version(),
       client: client(),
       can_update_history?: true
     }
+  end
+
+  defp ip do
+    case :inet.getif() do
+      {:ok, [{ip, _, _} | _]} ->
+        ip
+        |> :inet_parse.ntoa
+        |> List.to_string
+      _ ->
+        ""
+    end
   end
 
   defp os do
