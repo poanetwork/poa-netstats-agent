@@ -1,28 +1,31 @@
 defmodule POAAgent.Plugins.Collectors.System.MetricsTest do
   use ExUnit.Case
 
-  test "__using__ Collector" do
-    defmodule Metrics1 do
-      use POAAgent.Plugins.Collector
+  alias POAAgent.Plugins.Collectors.System.Metrics
 
-      def init_collector(_args) do
-        {:ok, :no_state}
-      end
+  test "testing" do
+    echo_transfer = :echo_transfer
+    {:ok, _echo} = EchoTransfer.start(echo_transfer)
 
-      def collect(:no_state) do
-        {:transfer, "data metrics", :no_state}
-      end
+    args = %{
+      name: :eth_pending,
+      transfers: [echo_transfer],
+      frequency: 500,
+      label: :my_metrics,
+      args: [url: "http://localhost:8545"]
+    }
+    {:ok, _pid} = Metrics.start(echo_transfer)
+    expected_metrics = expected_metrics(args)
 
-      def terminate(_state) do
-        :ok
-      end
-    end
+    assert_receive {:my_metrics, ^expected_info}, 20_000
+  end
 
-    assert Metrics1.init(%{frequency: 5_000}) == {:ok, %{internal_state: :no_state, frequency: 5_000}}
-    assert Metrics1.handle_call(:msg, :from, :state) == {:noreply, :state}
-    assert Metrics1.handle_cast(:msg, :state) == {:noreply, :state}
-    assert Metrics1.code_change(:old, :state, :extra) == {:ok, :state}
-    assert Metrics1.terminate(:reason, :state) == :ok
-
+  def expected_metrics() do
+    %Metrics{
+      os_type: {unix | win32, atom},
+      unix_process: integer | {error, term},
+      cpu_util: float | {error, term},
+      disk_used: integer,
+      memsup: [{atom, integer}]
   end
 end
