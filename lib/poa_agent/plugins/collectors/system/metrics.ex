@@ -6,21 +6,28 @@ defmodule POAAgent.Plugins.Collectors.System.Metrics do
   Nice describe
   """
 
+  @type internal_state :: %{last_metrics: Metric}
+
   @doc false
-  @spec init_collector(term()) :: {:ok, none()}
+  @spec init_collector(term()) :: {:ok, internal_state()}
   def init_collector(_args) do
     :application.ensure_all_started(:os_mon)
-    {:ok, :no_state}
+    {:ok, %{last_metrics: nil}}
   end
 
   @doc false
-  @spec collect(none()) :: term()
-  def collect(:no_state) do
-    {:transfer, metrics(), :no_state}
+  @spec collect(internal_state()) :: term()
+  def collect(%{last_metrics: last_metrics} = state) do
+    case metrics() do
+      ^last_metrics ->
+        {:notransfer, state}
+      metrics ->
+        {:transfer, metrics, %{last_metrics: metrics}}
+    end
   end
 
   @doc false
-  @spec terminate(term()) :: :ok
+  @spec terminate(internal_state()) :: :ok
   def terminate(_state) do
     :ok
   end
