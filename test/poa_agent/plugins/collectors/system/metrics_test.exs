@@ -22,7 +22,8 @@ defmodule POAAgent.Plugins.Collectors.System.MetricsTest do
                                           disk_used: disk_used,
                                           memsup: memsup}},
                                           20_000
-    assert is_atom(os_type1)
+    # assert is_atom(os_type1)
+    assert Enum.member?([:unix, :win32], os_type1)
     assert is_atom(os_type2)
     assert is_integer(unix_process)
     assert is_float(cpu_util)
