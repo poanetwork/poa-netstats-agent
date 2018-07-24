@@ -2,17 +2,29 @@ defmodule POAAgent.Plugins.Transfers.DB.Mnesia do
   @moduledoc false
 
   use POAAgent.Plugins.Transfer
+
+  alias __MODULE__
   alias POAAgent.Entity.System.Metric
+
+  defmodule State do
+    @moduledoc false
+
+    defstruct [
+      name: nil,
+      fields: nil,
+      last_metrics: %{}
+    ]
+  end
 
   @doc false
   @spec init_transfer(term()) :: {:ok, none()}
-  def init_transfer(_args) do
+  def init_transfer(args) do
+    state = struct(Mnesia.State, args)
+
     :application.ensure_all_started(:mnesia)
     _ = :mnesia.create_schema([node()])
-    _ = :mnesia.create_table(:metrics,[attributes: [:timestamp, :os_type,
-                                                    :unix_process, :cpu_util,
-                                                    :disk_util, :memsup]])
-    {:ok, :no_state}
+    _ = :mnesia.create_table(state.name, [attributes: Map.keys(state.fields)])
+    {:ok, state}
   end
 
   @doc false
