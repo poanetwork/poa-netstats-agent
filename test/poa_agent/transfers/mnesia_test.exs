@@ -17,11 +17,29 @@ defmodule POAAgent.Plugins.Transfers.DB.MnesiaTest do
     assert {:atomic, [{:metrics, 101, {:unix, :linux}, 101, 10.1, 10, [:ok, 10]}]} = :mnesia.transaction(read_data)
   end
 
+  test "sending more data to DB" do
+    args = %{name: :metrics_transfer, args: []}
+
+    {:ok, _pid} = Mnesia.start_link(args)
+
+    :ok = send_to_transfer(:metrics_transfer, :my_metrics, data_message())
+    :ok = send_to_transfer(:metrics_transfer, :my_metrics, data_message2())
+    Process.sleep(5000)
+
+    read_data = fn -> :mnesia.match_object({:metrics, :_, {:unix, :linux}, 101, 10.1, 10, [:ok, 10]}) end
+    assert {:atomic, query} = :mnesia.transaction(read_data)
+    assert 2 = Enum.count(query)
+  end
+
   defp send_to_transfer(transfer, label, data) do
     GenServer.cast(transfer, %{label: label, data: data})
   end
 
   defp data_message() do
     Metric.new(101, {:unix, :linux}, 101, 10.1, 10, [:ok, 10])
+  end
+
+  defp data_message2() do
+    Metric.new(102, {:unix, :linux}, 101, 10.1, 10, [:ok, 10])
   end
 end
