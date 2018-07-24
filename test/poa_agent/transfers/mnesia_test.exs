@@ -5,8 +5,10 @@ defmodule POAAgent.Plugins.Transfers.DB.MnesiaTest do
   alias POAAgent.Plugins.Transfers.DB.Mnesia
 
   test "sending data to mnesia" do
-    args = %{name: :metrics_transfer, args: [name: :metrics,
-                                             fields: Map.from_struct(Metric)]}
+    args = %{name: :metrics_transfer, args: [table_name: :metrics,
+                                             fields: [:timestamp, :os_type,
+                                                      :unix_process, :cpu_util,
+                                                      :disk_used, :memsup]]}
 
     {:ok, _pid} = Mnesia.start_link(args)
 
@@ -20,8 +22,10 @@ defmodule POAAgent.Plugins.Transfers.DB.MnesiaTest do
   end
 
   test "sending more data to DB" do
-    args = %{name: :metrics_transfer, args: [name: :metrics,
-                                             fields: Map.from_struct(Metric)]}
+    args = %{name: :metrics_transfer, args: [table_name: :metrics,
+                                             fields: [:timestamp, :os_type,
+                                                      :unix_process, :cpu_util,
+                                                      :disk_used, :memsup]]}
 
     {:ok, _pid} = Mnesia.start_link(args)
 

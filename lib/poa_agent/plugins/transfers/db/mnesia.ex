@@ -10,28 +10,27 @@ defmodule POAAgent.Plugins.Transfers.DB.Mnesia do
     @moduledoc false
 
     defstruct [
-      name: nil,
+      table_name: nil,
       fields: nil,
-      last_metrics: %{}
     ]
   end
 
   @doc false
-  @spec init_transfer(term()) :: {:ok, none()}
+  @spec init_transfer(term()) :: {:ok, State}
   def init_transfer(args) do
     state = struct(Mnesia.State, args)
 
     :application.ensure_all_started(:mnesia)
     _ = :mnesia.create_schema([node()])
-    _ = :mnesia.create_table(state.name, [attributes: Map.keys(state.fields)])
+    _ = :mnesia.create_table(state.table_name, [attributes: state.fields])
     {:ok, state}
   end
 
   @doc false
   @spec data_received(atom(), term(), none()) :: term()
-  def data_received(_label, data, _state) do
-    {:atomic, :ok} = store_data(data)
-    {:ok, :no_state}
+  def data_received(_label, data, state) do
+    {:atomic, :ok} = store_data(state, data)
+    {:ok, state}
   end
 
   @doc false
@@ -47,8 +46,8 @@ defmodule POAAgent.Plugins.Transfers.DB.Mnesia do
   end
 
   @doc false
-  defp store_data(data) do
-    :mnesia.transaction(fn -> :mnesia.write({:metrics, data.timestamp,
+  defp store_data(state, data) do
+    :mnesia.transaction(fn -> :mnesia.write({state.table_name, data.timestamp,
                                             data.os_type, data.unix_process,
                                             data.cpu_util, data.disk_used,
                                             data.memsup}) end)
