@@ -1,28 +1,27 @@
 defmodule POAAgent.Plugins.Transfers.DB.MnesiaTest do
   use ExUnit.Case
 
-  # alias POAAgent.Entity.System.Metric
+  alias POAAgent.Entity.System.Metric
   alias POAAgent.Plugins.Transfers.DB.Mnesia
 
-  import Mock
-
   test "sending data to mnesia" do
-    args = %{name: :metrics, args: []}
+    args = %{name: :metrics_transfer, args: []}
 
-    with_mocks ([{:disksup , [], [get_almost_full_threshold: fn() -> 10 end]},
-            {:memsup , [], [get_system_memory_data: fn() -> [{:ok, 10}] end]}
-      ]) do
+    {:ok, _pid} = Mnesia.start_link(args)
 
-      {:ok, _pid} = Mnesia.start_link(args)
+    :ok = send_to_transfer(:metrics_transfer, :my_metrics, data_message())
+    Process.sleep(5000)
 
-      Process.sleep(5000)
+    read_data = fn -> :mnesia.read({:metrics, 101}) end
 
-      read_data = fn -> :mnesia.read({:metrics}) end
+    assert {:atomic, [{:metrics, 101, {:unix, :linux}, 101, 10.1, 10, [:ok, 10]}]} = :mnesia.transaction(read_data)
+  end
 
-      assert {:atomic, [:metrics, _, _, _, disk_used,
-                        memsup]} = :mnesia.transaction(read_data)
-      assert disk_used == 10
-      assert memsup == [{:ok, 10}]
-    end
+  defp send_to_transfer(transfer, label, data) do
+    GenServer.cast(transfer, %{label: label, data: data})
+  end
+
+  defp data_message() do
+    Metric.new(101, {:unix, :linux}, 101, 10.1, 10, [:ok, 10])
   end
 end

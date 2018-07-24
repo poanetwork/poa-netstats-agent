@@ -9,9 +9,9 @@ defmodule POAAgent.Plugins.Transfers.DB.Mnesia do
   def init_transfer(_args) do
     :application.ensure_all_started(:mnesia)
     _ = :mnesia.create_schema([node()])
-    _ = :mnesia.create_table(:metrics,[attributes: [:id,:os_type, :unix_process,
-                                                     :cpu_util, :disk_util,
-                                                     :memsup]])
+    _ = :mnesia.create_table(:metrics,[attributes: [:timestamp, :os_type,
+                                                    :unix_process, :cpu_util,
+                                                    :disk_util, :memsup]])
     {:ok, :no_state}
   end
 
@@ -36,7 +36,7 @@ defmodule POAAgent.Plugins.Transfers.DB.Mnesia do
 
   @doc false
   defp store_data(data) do
-    :mnesia.transaction(fn -> :mnesia.write({:metrics, System.monotonic_time(), #I will change that
+    :mnesia.transaction(fn -> :mnesia.write({:metrics, data.timestamp,
                                             data.os_type, data.unix_process,
                                             data.cpu_util, data.disk_used,
                                             data.memsup}) end)

@@ -37,7 +37,7 @@ defmodule POAAgent.Plugins.Collectors.System.Metrics do
   defp metrics() do
     unix_process = check_metric(:cpu_sup.nprocs())
     cpu_util = check_metric(:cpu_sup.util())
-    Metric.new(:os.type(), unix_process, cpu_util,
+    Metric.new(:os.system_time(), :os.type(), unix_process, cpu_util,
                :disksup.get_almost_full_threshold(),
                :memsup.get_system_memory_data())
   end

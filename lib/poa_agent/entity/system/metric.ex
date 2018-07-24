@@ -2,6 +2,7 @@ defmodule POAAgent.Entity.System.Metric do
   @moduledoc false
 
   @type t :: %__MODULE__{
+    timestamp: integer,
     os_type: {atom, atom},
     unix_process: integer | nil,
     cpu_util: float | nil,
@@ -10,6 +11,7 @@ defmodule POAAgent.Entity.System.Metric do
   }
 
   defstruct [
+    timestamp: nil,
     os_type: nil,
     unix_process: nil,
     cpu_util: nil,
@@ -17,9 +19,11 @@ defmodule POAAgent.Entity.System.Metric do
     memsup: nil
   ]
 
-  @spec new({atom,atom}, integer | nil, float | nil, integer, [{atom, integer}]) :: t
-  def new(os_type, unix_process, cpu_util, disk_used, memsup) do
+  @spec new(integer, {atom,atom}, integer | nil, float | nil, integer,
+            [{atom, integer}]) :: t
+  def new(timestamp, os_type, unix_process, cpu_util, disk_used, memsup) do
     %__MODULE__{
+      timestamp: timestamp,
       os_type: os_type,
       unix_process: unix_process,
       cpu_util: cpu_util,
