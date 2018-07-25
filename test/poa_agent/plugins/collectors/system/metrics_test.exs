@@ -43,6 +43,7 @@ defmodule POAAgent.Plugins.Collectors.System.MetricsTest do
       args: [url: "http://localhost:8545"]
     }
 
+    :application.ensure_all_started(:os_mon)
     with_mocks ([
       # {:os , [], [type: fn() -> {:unix, :linux} end]}, we cannot mock this one
       # {:cpu_sup , [], [nprocs: fn() -> 10 end,    we cannot mock those one too
