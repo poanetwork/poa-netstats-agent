@@ -1,7 +1,7 @@
 use Mix.Config
 
 config :poa_agent,
-    config_overlay: "config/transfer_overlay.json"
+    config_overlay: "config/config_overlay.json"
 
 config :ethereumex,
     url: "http://localhost:8545"
