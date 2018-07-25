@@ -4,7 +4,6 @@ defmodule POAAgent.Plugins.Transfers.DB.Mnesia do
   use POAAgent.Plugins.Transfer
 
   alias __MODULE__
-  alias POAAgent.Entity.System.Metric
 
   defmodule State do
     @moduledoc false
@@ -27,7 +26,7 @@ defmodule POAAgent.Plugins.Transfers.DB.Mnesia do
   end
 
   @doc false
-  @spec data_received(atom(), term(), none()) :: term()
+  @spec data_received(atom(), term(), term()) :: term()
   def data_received(_label, data, state) do
     {:atomic, :ok} = store_data(state, data)
     {:ok, state}
@@ -47,9 +46,9 @@ defmodule POAAgent.Plugins.Transfers.DB.Mnesia do
 
   @doc false
   defp store_data(state, data) do
-    :mnesia.transaction(fn -> :mnesia.write({state.table_name, data.timestamp,
-                                            data.os_type, data.unix_process,
-                                            data.cpu_util, data.disk_used,
-                                            data.memsup}) end)
+    l = Enum.reduce(state.fields, [state.table_name],
+                    fn(field, acc) -> acc ++ [Map.get(data, field)] end)
+    data = List.to_tuple(l)
+    :mnesia.transaction(fn -> :mnesia.write(data) end )
   end
 end
