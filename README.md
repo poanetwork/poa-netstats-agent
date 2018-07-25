@@ -67,8 +67,8 @@ Other options are possible (see `https://hexdocs.pm/distillery/getting-started.h
 ## Configuration
 
 Executables are built with a configuration as described above.
-However the Primus/WebSocket transfer is configurable at run-time through a JSON configuration.
-To configure this supply a path to a JSON file with the `transfer_config_overlay` key/value.
+However the transfers and collectors are configurable at run-time through a JSON configuration.
+To configure this supply a path to a JSON file with the `config_overlay` key/value.
 The following is an extract from [config/test.exs](config/test.exs):
 
 ```Elixir
