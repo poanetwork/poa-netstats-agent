@@ -1,7 +1,7 @@
 use Mix.Config
 
 config :poa_agent,
-    config_overlay: "config/transfer_overlay.json"
+    config_overlay: "config/config_overlay.json"
 
 config :ethereumex,
     url: "http://localhost:8545"
@@ -24,7 +24,11 @@ config :poa_agent,
          {:rest_transfer, POAAgent.Plugins.Transfers.HTTP.REST, [
              address: "http://localhost:4002",
              identifier: "elixirNodeJSIntegration",
-             secret: "mysecret"
+
+             # Authentication parameters
+             user: "971Iwekd",
+             password: "9BOZIf1uGHi2FIB",
+             token_url: "https://localhost:4003/session"
            ]
          }
        ]

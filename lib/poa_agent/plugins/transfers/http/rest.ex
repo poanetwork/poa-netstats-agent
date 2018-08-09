@@ -15,13 +15,16 @@ defmodule POAAgent.Plugins.Transfers.HTTP.REST do
     defstruct [
       address: nil,
       identifier: nil,
-      secret: nil,
-      ping_timer_ref: nil,
-      last_metrics: %{}
+      user: nil,
+      password: nil,
+      token_url: nil,
+      token: "",
+      ping_timer_ref: nil
     ]
   end
 
   @ping_frequency 3_000
+  @content_type_header {"Content-Type", "application/msgpack"}
 
   def init_transfer(configuration) do
     state = struct(REST.State, configuration)
@@ -33,13 +36,13 @@ defmodule POAAgent.Plugins.Transfers.HTTP.REST do
     require Logger
     Logger.info("Received data from the collector referenced by label: #{label}.")
 
-    last_metrics = Enum.reduce(data, state.last_metrics, fn(message, metrics) ->
-      send_metric(message, state)
+    state = Enum.reduce(data, state, fn(message, state) ->
+      {_, state} = send_metric(message, state)
 
-      Map.put(metrics, label, message)
+      state
     end)
 
-    {:ok, %{state | last_metrics: last_metrics}}
+    {:ok, state}
   end
 
   def data_received(label, data, state) do
@@ -55,24 +58,22 @@ defmodule POAAgent.Plugins.Transfers.HTTP.REST do
 
     event = %{}
       |> Map.put(:id, state.identifier)
-      |> Map.put(:secret, state.secret)
       |> Msgpax.pack!()
 
     before_ping = POAAgent.Utils.system_time()
 
-    case post(state.address <> url, event) do
-      {:ok, %HTTPoison.Response{status_code: 200}} ->
-        latency = (POAAgent.Utils.system_time() - before_ping) / 1
-        send_latency(latency, state)
-      {:ok, %HTTPoison.Response{status_code: error}} ->
-        Logger.warn("Error sending a ping code #{inspect error}")
-      {:error, %HTTPoison.Error{reason: reason}} ->
-        Logger.warn("Error sending a ping reason #{inspect reason}")
-    end
+    {_, state} =
+      case post(state.address <> url, event, state) do
+        {%HTTPoison.Response{status_code: 200}, state} ->
+          latency = (POAAgent.Utils.system_time() - before_ping) / 1
+          send_latency(latency, state)
+        {_, state} ->
+          {:ok, state}
+      end
 
     ping_timer_ref = set_ping_timer()
 
-    {:ok, %{state | ping_timer_ref: ping_timer_ref}}
+    {:ok, %State{state | ping_timer_ref: ping_timer_ref}}
   end
 
   defp send_latency(latency, state) do
@@ -93,20 +94,60 @@ defmodule POAAgent.Plugins.Transfers.HTTP.REST do
     event =
       %{}
       |> Map.put(:id, state.identifier)
-      |> Map.put(:secret, state.secret)
       |> Map.put(:type, "ethereum_metrics") # for now only ethereum_metrics
       |> Map.put(:data, data)
       |> Msgpax.pack!()
 
-      post(state.address <> url, event)
+      post(state.address <> url, event, state)
   end
 
-  defp post(address, event) do
-    HTTPoison.post(address, event, [{"Content-Type", "application/msgpack"}])
+  defp post(address, event, state) do
+    headers = [@content_type_header, bearer_auth_header(state.token)]
+
+    case HTTPoison.post(address, event, headers) do
+      {:ok, %HTTPoison.Response{status_code: 200} = result} ->
+        {result, state}
+      {:ok, %HTTPoison.Response{status_code: 401}} ->
+        Logger.warn("Error 401, getting a new Token")
+        jwt_token = new_token(state)
+        result = HTTPoison.post(address, event, [@content_type_header, bearer_auth_header(jwt_token)])
+        {result, %State{state | token: jwt_token}}
+      {:ok, %HTTPoison.Response{status_code: error} = result} ->
+        Logger.warn("Error sending with POST, code #{inspect error}")
+        {result, state}
+      {:error, %HTTPoison.Error{reason: reason} = result} ->
+        Logger.warn("Error unexpected sending with POST, the reason is #{inspect reason}")
+        {result, state}
+    end
+  end
+
+  defp new_token(state) do
+    headers = [@content_type_header, basic_auth_header(state.user, state.password)]
+    options = [ssl: [{:versions, [:'tlsv1.2']}], recv_timeout: 500]
+
+    body =
+      %{}
+      |> Map.put(:'agent-id', state.identifier)
+      |> Msgpax.pack!()
+
+    case HTTPoison.post(state.token_url, body, headers, options) do
+      {:ok, %HTTPoison.Response{status_code: 200, body: body}} ->
+        body_decoded = Poison.decode!(body)
+        body_decoded["token"]
+      _ ->
+        ""
+    end
   end
 
   defp set_ping_timer() do
     Process.send_after(self(), :ping, @ping_frequency)
   end
 
+  defp bearer_auth_header(token) do
+    {"Authorization", "Bearer " <> token}
+  end
+
+  defp basic_auth_header(user, password) do
+    {"Authorization", "Basic " <> Base.encode64(user <> ":" <> password)}
+  end
 end
