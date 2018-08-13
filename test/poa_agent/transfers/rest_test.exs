@@ -7,7 +7,7 @@ defmodule POAAgent.Transfers.RestTest do
   import Mock
 
   test "sending the Ping and Latency messages" do
-    args = %{name: :rest_dashboard, args: [address: "localhost", contact: "mymail@gmail.com"]}
+    args = %{name: :rest_dashboard, args: [address: "localhost"]}
     test_pid = self()
 
     with_mocks([
@@ -39,7 +39,7 @@ defmodule POAAgent.Transfers.RestTest do
   end
 
   test "sending the data message" do
-    args = %{name: :rest_dashboard, args: [address: "localhost", contact: "mymail@gmail.com"]}
+    args = %{name: :rest_dashboard, args: [address: "localhost"]}
     test_pid = self()
 
     with_mock HTTPoison, [
@@ -57,14 +57,35 @@ defmodule POAAgent.Transfers.RestTest do
     end
   end
 
-  test "handling rest errors" do
-    args = %{name: :rest_dashboard, args: [address: "localhost", contact: "mymail@gmail.com"]}
+  test "handling rest 401 errors" do
+    args = %{name: :rest_dashboard, args: [address: "localhost", user: "ferigis", password: "123456", token_url: "localhost"]}
     test_pid = self()
 
     with_mock HTTPoison, [
         post: fn(url, event, _) ->
           send(test_pid, {url, event})
           {:ok, %HTTPoison.Response{status_code: 401}}
+        end,
+        post: fn(url, event, _, _) ->
+          send(test_pid, {url, event})
+          {:ok, %HTTPoison.Response{status_code: 200, body: Poison.encode!(%{token: "token"})}}
+        end
+      ] do
+      {:ok, _pid} = REST.start_link(args)
+
+      # we are not going to receive latency messages
+      refute_receive {"localhost/latency", _}, 20_000
+    end
+  end
+
+  test "handling rest 415 errors" do
+    args = %{name: :rest_dashboard, args: [address: "localhost", user: "ferigis", password: "123456", token_url: "localhost"]}
+    test_pid = self()
+
+    with_mock HTTPoison, [
+        post: fn(url, event, _) ->
+          send(test_pid, {url, event})
+          {:ok, %HTTPoison.Response{status_code: 415}}
         end
       ] do
       {:ok, _pid} = REST.start_link(args)
@@ -75,7 +96,7 @@ defmodule POAAgent.Transfers.RestTest do
   end
 
   test "handling rest econnrefused" do
-    args = %{name: :rest_dashboard, args: [address: "localhost", contact: "mymail@gmail.com"]}
+    args = %{name: :rest_dashboard, args: [address: "localhost"]}
     test_pid = self()
 
     with_mock HTTPoison, [
