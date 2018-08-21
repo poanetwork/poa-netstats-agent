@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="generator" content="ExDoc v0.18.3">
+    <title>Getting Started – poa_agent v0.1.0</title>
+    <link rel="stylesheet" href="dist/app-480ffdc169.css" />
+    
+    <script src="dist/sidebar_items-303975f305.js"></script>
+    
+    
+    
+    
+  </head>
+  <body data-type="extras">
+    <script>try { if(localStorage.getItem('night-mode')) document.body.className += ' night-mode'; } catch (e) { }</script>
+
+<div class="main">
+<button class="sidebar-button sidebar-toggle">
+  <span class="icon-menu" aria-hidden="true"></span>
+  <span class="sr-only">Toggle Sidebar</span>
+</button>
+<button class="sidebar-button night-mode-toggle">
+  <span class="icon-theme" aria-hidden="true"></span>
+  <span class="sr-only">Toggle Theme</span>
+</button>
+<section class="sidebar">
+
+  
+  <a href="POAAgent.html" class="sidebar-projectLink">
+    <div class="sidebar-projectDetails">
+      <h1 class="sidebar-projectName">
+        poa_agent
+      </h1>
+      <h2 class="sidebar-projectVersion">
+        v0.1.0
+      </h2>
+    </div>
+    
+  </a>
+
+  <form class="sidebar-search" action="search.html">
+    <button type="submit" class="search-button">
+      <span class="icon-search" aria-hidden="true"></span>
+    </button>
+    <input name="q" type="text" id="search-list" class="search-input" placeholder="Search" aria-label="Search" autocomplete="off" />
+  </form>
+
+  <ul class="sidebar-listNav">
+    <li><a id="extras-list" href="#full-list">Pages</a></li>
+
+    
+      <li><a id="modules-list" href="#full-list">Modules</a></li>
+    
+
+    
+
+    
+  </ul>
+  <div class="gradient"></div>
+  <ul id="full-list" class="sidebar-fullList"></ul>
+</section>
+
+<section class="content">
+  <div class="content-outer">
+    <div id="content" class="content-inner">
+
+
+<h1>Starting Guide</h1>
+<p>With this guide we are going to go thru an example of how to set up the agent and connect with the <code class="inline">POA Warehouse</code>.</p>
+<h1>Brief introduction</h1>
+<p><a href="POAAgent.html"><code class="inline">POAAgent</code></a> is built on top of a Collector’s Plugin Mechanism. You can add, remove and create your own one. We have developed some collectors but you can create your own ones. Check <a href="POAAgent.Plugins.Collector.html">how to implement a collector</a>.</p>
+<p>The <code class="inline">Collectors</code> send data to <code class="inline">Transfers</code>. A transfer is an Elixir process which will receive the data. You can implement your own Transfer, check <a href="POAAgent.Plugins.Transfer.html">this</a>. We have developed a transfer in order to send data to the <a href="https://github.com/poanetwork/poa-netstats-warehouse">POA Warehouse</a>.</p>
+<p>Every collector can send data to one or many different transfers. The mapping between collectors and Transfers is done in the config file.</p>
+<p>In our example we are going to add 4 collectors</p>
+<ul>
+<li>Information Collector: This collector sends Ethereum info to the Transfers periodically.
+</li>
+<li>Latest Block Collector: This collector “listens” the Ethereum node checking if a new block has been added. Once a new token is detected it will be sent to the mapped Transfers.
+</li>
+<li>Stats Collector: This collector checks periodically the Ethereum node in order to see if the stats has changed. When changed it will send the data to the transfers.
+</li>
+<li>Pending Transactions Collector: This collector checks with the Ethereum node if the value of “Pending Transactions” has changed, if that is the case it will send the data to the Transfers.
+</li>
+</ul>
+<h2 id="setting-up" class="section-heading">
+  <a href="#setting-up" class="hover-link"><span class="icon-link" aria-hidden="true"></span></a>
+  Setting up
+</h2>
+
+<p>The collectors we want to use need an Ethereum node to monitor so we will need the host:port. In our example my Ethereum node is running in <code class="inline">http://localhost:8545</code></p>
+<p>In order to configure the Agent we have to fill a config file. In this case we are going to call it <code class="inline">prod.exs</code>. We are going to fill it step by step:</p>
+<p>We have use the <a href="https://hexdocs.pm/mix/Mix.Config.html"><code class="inline">Mix.Config</code></a> module, this is needed in every Elixir Config file.</p>
+<pre><code class="elixir">use Mix.Config</code></pre>
+<p>Next we have to indicate the overlay configuration, you can check how that works <a href="POAAgent.html#module-configuration">here</a> but in our case the <code class="inline">config_overlay.json</code> will remain without changes.</p>
+<pre><code class="elixir">config :poa_agent,
+    config_overlay: &quot;config/config_overlay.json&quot;</code></pre>
+<p>Now we need the <code class="inline">Ethereumex</code> configuration. <a href="https://github.com/exthereum/ethereumex">Ethereumex</a> is the Elixir library we are using to communicate with the Ethereum node. There we have to put the Ethereum url.</p>
+<pre><code class="elixir">config :ethereumex,
+    url: &quot;http://localhost:8545&quot;</code></pre>
+<p>We also need the configuration for the Collectors, here we have to indicate the ones we are going to use.</p>
+<pre><code class="elixir">config :poa_agent, 
+       :collectors,
+       [
+         {:eth_information, POAAgent.Plugins.Collectors.Eth.Information, 60_000, :eth_information, [url: &quot;http://localhost:8545&quot;, name: &quot;Elixir-NodeJS-Integration&quot;, contact: &quot;myemail@gmail.com&quot;]},
+         {:eth_latest_block, POAAgent.Plugins.Collectors.Eth.LatestBlock, 500, :latest_block, [url: &quot;http://localhost:8545&quot;]},
+         {:eth_stats, POAAgent.Plugins.Collectors.Eth.Stats, 5000, :eth_stats, [url: &quot;http://localhost:8545&quot;]},
+         {:eth_pending, POAAgent.Plugins.Collectors.Eth.Pending, 500, :eth_pending, [url: &quot;http://localhost:8545&quot;]}
+         
+       ]</code></pre>
+<p>You can check in the docs what each field mean in the configuration but it is quite straightforward.</p>
+<p>Now we are going to configure the Transfer information. For now we are not going to use transfers (we will check how to use the Warehouse transfer later).</p>
+<pre><code class="elixir">config :poa_agent, 
+       :transfers,
+       [
+       ]</code></pre>
+<p>The last steps is configuring the mapping. Mapping is where we say to which Transfers each Collector is going to send the data. In our case is straightforward since we are not using Transfers</p>
+<pre><code class="elixir">config :poa_agent,
+       :mappings,
+       [
+         {:eth_latest_block, []},
+         {:eth_stats, []},
+         {:eth_pending, []},
+         {:eth_information, []}
+       ]</code></pre>
+<p>with this configuration the agent must be able to start running the command</p>
+<pre><code class="elixir">MIX_ENV=prod iex -S mix</code></pre>
+<p><code class="inline">MIX_ENV=prod</code> sets a Environment variable used by mix to <code class="inline">prod</code>. We are using that variable for choosing the config files. That means we are going to use <code class="inline">prod.exs</code> as a configuration file.</p>
+<p>This will start the agent directly in the terminal. If you want to create a release you must read <a href="POAAgent.html#module-building-deploying-an-executable">this</a></p>
+<h2 id="connecting-to-poa-warehouse" class="section-heading">
+  <a href="#connecting-to-poa-warehouse" class="hover-link"><span class="icon-link" aria-hidden="true"></span></a>
+  Connecting to POA Warehouse
+</h2>
+
+<p>In order to connect with POA Warehouse we have to use a Transfer which is aligned with the POA’s protocol. We have developed a Transfer called <code class="inline">REST</code> which implements the REST version of the POA’s protocol. In order to use it we have to declare it in the Config file.</p>
+<p>Let’s update the <code class="inline">transfers</code> section in the <code class="inline">prod.exs</code> file</p>
+<pre><code class="elixir">config :poa_agent, 
+       :transfers,
+       [
+         {:rest_transfer, POAAgent.Plugins.Transfers.HTTP.REST, [
+             address: &quot;http://localhost:4002&quot;,
+             identifier: &quot;elixirNodeJSIntegration&quot;,
+
+             # Authentication parameters
+             user: &quot;&quot;,
+             password: &quot;&quot;,
+             token_url: &quot;&quot;
+           ]
+         }
+       ]</code></pre>
+<p>Well, it seems we need some Auth parameters before starting the Agent. We need a valid user with a valid password and we also need a url in order to request JWT tokens</p>
+<p>First we will create a valid user/password. If you want to join POA’s network you have to ask them for a new user/password. If you have access to the Warehouse you have to call the <em>create user</em> endpoint.</p>
+<p>Let’s assume we have access to the Warehouse and it is running in <code class="inline">https://localhost:4003</code>. We start asking for a user/password with a valid Admin user and Admin Password. The Admin is “admin1” and the password “password12345678”. We can find the documentation about the user endpoint <a href="https://rawgit.com/poanetwork/poa-netstats-warehouse/master/doc/POABackend.Auth.REST.html#module-user-endpoint">here</a>.</p>
+<pre><code class="elixir">curl -i -X POST -H &quot;Authorization: Basic YWRtaW4xOnBhc3N3b3JkMTIzNDU2Nzg=&quot; -H &quot;Content-Type: application/json&quot; https://localhost:4003/user --insecure
+
+HTTP/1.1 200 OK
+server: Cowboy
+date: Tue, 21 Aug 2018 00:18:29 GMT
+content-length: 53
+cache-control: max-age=0, private, must-revalidate
+
+{&quot;user-name&quot;:&quot;BK3eiZcT&quot;,&quot;password&quot;:&quot;MPr1n9B-ipvpYbj&quot;}</code></pre>
+<p>There we have our user name and password. We also know the token url is in <code class="inline">https://localhost:4003/session</code>. Now we have to update the config file.</p>
+<pre><code class="elixir">config :poa_agent, 
+       :transfers,
+       [
+         {:rest_transfer, POAAgent.Plugins.Transfers.HTTP.REST, [
+             address: &quot;http://localhost:4002&quot;,
+             identifier: &quot;elixirNodeJSIntegration&quot;,
+
+             # Authentication parameters
+             user: &quot;BK3eiZcT&quot;,
+             password: &quot;MPr1n9B-ipvpYbj&quot;,
+             token_url: &quot;https://localhost:4003/session&quot;
+           ]
+         }
+       ]</code></pre>
+<p>We have more configuration to update. Since we have added a Transfer we have to send data to it, so we have to make all the collectors sending data to that <code class="inline">rest_transfer</code></p>
+<pre><code class="elixir">config :poa_agent,
+       :mappings,
+       [
+         {:eth_latest_block, [:rest_transfer]},
+         {:eth_stats, [:rest_transfer]},
+         {:eth_pending, [:rest_transfer]},
+         {:eth_information, [:rest_transfer]}
+       ]</code></pre>
+<p>Now we can stop the agent and start again.</p>
+<pre><code class="elixir">MIX_ENV=prod iex -S mix</code></pre>
+<p>Now you will see in the Agent’s terminal the transfer is requesting a token and sending data to the Warehouse.</p>
+
+      <footer class="footer">
+        <p>
+          <span class="line">
+            Built using
+            <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" rel="help" target="_blank">ExDoc</a> (v0.18.3),
+          </span>
+          <span class="line">
+            designed by
+            <a href="https://twitter.com/dignifiedquire" target="_blank" title="@dignifiedquire">Friedel Ziegelmayer</a>.
+            </span>
+        </p>
+      </footer>
+    </div>
+  </div>
+</section>
+</div>
+  <script src="dist/app-9bd040e5e5.js"></script>
+  
+  
+  
+  
+  </body>
+</html>
+

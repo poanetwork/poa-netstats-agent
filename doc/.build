@@ -4,11 +4,13 @@ fonts/icomoon.eot
 fonts/icomoon.svg
 fonts/icomoon.ttf
 fonts/icomoon.woff
-dist/sidebar_items-d9b3f5cff8.js
+dist/sidebar_items-303975f305.js
 api-reference.html
 initial_architecture.html
+starting_guide.html
 search.html
 404.html
+POAAgent.html
 POAAgent.Application.html
 POAAgent.Entity.NameConvention.html
 POAAgent.Format.POAProtocol.Data.Format.html
