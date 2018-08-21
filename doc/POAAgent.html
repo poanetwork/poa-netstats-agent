@@ -1,0 +1,222 @@
+    <!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="generator" content="ExDoc v0.18.3">
+    <title>POAAgent – poa_agent v0.1.0</title>
+    <link rel="stylesheet" href="dist/app-480ffdc169.css" />
+    
+    <script src="dist/sidebar_items-303975f305.js"></script>
+    
+    
+    
+    
+  </head>
+  <body data-type="modules">
+    <script>try { if(localStorage.getItem('night-mode')) document.body.className += ' night-mode'; } catch (e) { }</script>
+
+    <div class="main">
+<button class="sidebar-button sidebar-toggle">
+  <span class="icon-menu" aria-hidden="true"></span>
+  <span class="sr-only">Toggle Sidebar</span>
+</button>
+<button class="sidebar-button night-mode-toggle">
+  <span class="icon-theme" aria-hidden="true"></span>
+  <span class="sr-only">Toggle Theme</span>
+</button>
+<section class="sidebar">
+
+  
+  <a href="POAAgent.html" class="sidebar-projectLink">
+    <div class="sidebar-projectDetails">
+      <h1 class="sidebar-projectName">
+        poa_agent
+      </h1>
+      <h2 class="sidebar-projectVersion">
+        v0.1.0
+      </h2>
+    </div>
+    
+  </a>
+
+  <form class="sidebar-search" action="search.html">
+    <button type="submit" class="search-button">
+      <span class="icon-search" aria-hidden="true"></span>
+    </button>
+    <input name="q" type="text" id="search-list" class="search-input" placeholder="Search" aria-label="Search" autocomplete="off" />
+  </form>
+
+  <ul class="sidebar-listNav">
+    <li><a id="extras-list" href="#full-list">Pages</a></li>
+
+    
+      <li><a id="modules-list" href="#full-list">Modules</a></li>
+    
+
+    
+
+    
+  </ul>
+  <div class="gradient"></div>
+  <ul id="full-list" class="sidebar-fullList"></ul>
+</section>
+
+<section class="content">
+  <div class="content-outer">
+    <div id="content" class="content-inner">
+
+
+      <h1>
+        <small class="visible-xs">poa_agent v0.1.0</small>
+        POAAgent
+        
+          <a href="https://github.com/poanetwork/poa-netstats-agent/blob/v0.1.0/lib/poa_agent.ex#L1" title="View Source" class="view-source" rel="help">
+            <span class="icon-code" aria-hidden="true"></span>
+            <span class="sr-only">View Source</span>
+          </a>
+        
+      </h1>
+
+      
+        <section id="moduledoc">
+          <h1>POAAgent</h1>
+<p><a href="https://coveralls.io/github/poanetwork/poa-netstats-agent?branch=master"><img src="https://coveralls.io/repos/github/poanetwork/poa-netstats-agent/badge.svg?branch=master" alt="Coverage Status"/></a>
+<a href="https://codecov.io/gh/poanetwork/poa-netstats-agent"><img src="https://codecov.io/gh/poanetwork/poa-netstats-agent/branch/master/graph/badge.svg" alt="codecov"/></a></p>
+<h2 id="module-documentation" class="section-heading">
+  <a href="#module-documentation" class="hover-link"><span class="icon-link" aria-hidden="true"></span></a>
+  Documentation
+</h2>
+
+<ul>
+<li><a href="pages/initial_architecture.md">Initial Architecture</a>
+</li>
+<li>You can find the online documentation <a href="https://rawgit.com/poanetwork/poa-netstats-agent/master/doc/index.html">here</a>
+</li>
+<li><a href="starting_guide.html">Getting Started</a>
+</li>
+</ul>
+<p>Or you can build the documenation locally running</p>
+<pre><code class="elixir">mix deps.get
+mix docs</code></pre>
+<p>That command will create a <code class="inline">doc/</code> folder with the actual Documentation.</p>
+<h2 id="module-run" class="section-heading">
+  <a href="#module-run" class="hover-link"><span class="icon-link" aria-hidden="true"></span></a>
+  Run
+</h2>
+
+<p>POAAgent is an Elixir application, in order to run it first we need to fetch the dependencies and compile it.</p>
+<pre><code class="elixir">mix deps.get
+mix deps.compile
+mix compile</code></pre>
+<p>To run the Elixir application while under development it may be convenient to use:
+<code class="inline">env MIX_ENV=dev mix run --no-halt</code> with an appropiate configuration in <code class="inline">/config/dev.exs</code>.</p>
+<h2 id="module-run-tests" class="section-heading">
+  <a href="#module-run-tests" class="hover-link"><span class="icon-link" aria-hidden="true"></span></a>
+  Run Tests
+</h2>
+
+<p>In order to run the tests we have to run the command</p>
+<pre><code class="elixir">mix test</code></pre>
+<p><a href="POAAgent.html#content"><code class="inline">POAAgent</code></a> comes also with a code analysis tool <a href="https://github.com/rrrene/credo">Credo</a> and a types checker tool <a href="https://github.com/jeremyjh/dialyxir">Dialyxir</a>. In order to run them we have to run</p>
+<pre><code class="elixir">mix credo
+mix dialyzer</code></pre>
+<h2 id="module-building-deploying-an-executable" class="section-heading">
+  <a href="#module-building-deploying-an-executable" class="hover-link"><span class="icon-link" aria-hidden="true"></span></a>
+  Building &amp; Deploying an Executable
+</h2>
+
+<p>To build an executable you’ll need Elixir 1.6 (and Erlang/OTP 20).</p>
+<ol>
+<li>Once you have a copy of this repository configure the agent for production in the file <code class="inline">config/prod.exs</code>.
+</li>
+<li>An real configuration example can be found in the default <code class="inline">config/prod.exs</code>.
+</li>
+<li>Do a <code class="inline">mix deps.get</code> to fetch, among other dependencies, the tooling for building server executables.
+</li>
+<li>A <code class="inline">env MIX_ENV=prod mix release --name=poa_agent --env=prod</code> will assemble an executable.
+</li>
+</ol>
+<p>A resulting artifact resides at <code class="inline">_build/prod/rel/poa_agent/releases/0.1.0/poa_agent.tar.gz</code> which you can move to a remote host.
+Use <code class="inline">tar xfz</code> then <code class="inline">bin/poa_agent start</code> (<code class="inline">bin/poa_agent stop</code> will stop the server cleanly).</p>
+<p>If you want to run it on the local host then the procedure is as simple as: <code class="inline">_build/prod/rel/poa_agent/bin/poa_agent</code>.</p>
+<p><strong>Note:</strong> executables must be built on the platform (OS and architecture) they are destined for under the project’s current configuration.
+Other options are possible (see <code class="inline">https://hexdocs.pm/distillery/getting-started.html</code>).</p>
+<h2 id="module-configuration" class="section-heading">
+  <a href="#module-configuration" class="hover-link"><span class="icon-link" aria-hidden="true"></span></a>
+  Configuration
+</h2>
+
+<p>Executables are built with a configuration as described above.
+However the transfers and collectors are configurable at run-time through a JSON configuration.
+To configure this supply a path to a JSON file with the <code class="inline">config_overlay</code> key/value.
+The following is an extract from <a href="config/test.exs">config/test.exs</a>:</p>
+<pre><code class="Elixir">config :poa_agent,
+    config_overlay: &quot;config/config_overlay.json&quot;</code></pre>
+<p>A corresponding example is provided in <code class="inline">config/config_overlay.json</code>:</p>
+<pre><code class="JSON">{
+    &quot;POAAgent&quot;:{
+        &quot;collectors&quot;:[
+            {
+                &quot;id&quot;: &quot;eth_information&quot;,
+                &quot;url&quot;: &quot;http://localhost:8546&quot;,
+                &quot;name&quot;: &quot;NewNodeName&quot;,
+                &quot;contact&quot;: &quot;mynewemail@gmail.com&quot;
+            }
+        ],
+        &quot;transfers&quot;:[
+            {
+                &quot;id&quot;: &quot;rest_transfer&quot;,
+                &quot;address&quot;: &quot;http://localhost:4003&quot;,
+                &quot;identifier&quot;: &quot;NewIdentifier&quot;,
+                &quot;secret&quot;: &quot;newsecret&quot;
+            }
+        ]
+    }
+}
+</code></pre>
+<p>The file can reside anywhere on the machine that the Elixir executable has access to.
+The key/value pairs in the JSON configuration will replace the defaults specified in the Elixir configuration (i.e. <code class="inline">config/{dev,test,prod}.exs</code>).</p>
+<h2 id="module-coverage" class="section-heading">
+  <a href="#module-coverage" class="hover-link"><span class="icon-link" aria-hidden="true"></span></a>
+  Coverage
+</h2>
+
+<p>To get an HTML coverage report on your own machine try <code class="inline">env MIX_ENV=test mix coveralls.html</code> then open <code class="inline">cover/excoveralls.html</code>.
+You can get a simple print-out with <code class="inline">env MIX_ENV=test mix coveralls</code>.</p>
+
+        </section>
+      
+
+      
+
+      
+
+      
+
+      
+          <footer class="footer">
+        <p>
+          <span class="line">
+            Built using
+            <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" rel="help" target="_blank">ExDoc</a> (v0.18.3),
+          </span>
+          <span class="line">
+            designed by
+            <a href="https://twitter.com/dignifiedquire" target="_blank" title="@dignifiedquire">Friedel Ziegelmayer</a>.
+            </span>
+        </p>
+      </footer>
+    </div>
+  </div>
+</section>
+</div>
+  <script src="dist/app-9bd040e5e5.js"></script>
+  
+  
+  
+  
+  </body>
+</html>
+

@@ -3,11 +3,10 @@
 [![Coverage Status](https://coveralls.io/repos/github/poanetwork/poa-netstats-agent/badge.svg?branch=master)](https://coveralls.io/github/poanetwork/poa-netstats-agent?branch=master)
 [![codecov](https://codecov.io/gh/poanetwork/poa-netstats-agent/branch/master/graph/badge.svg)](https://codecov.io/gh/poanetwork/poa-netstats-agent)
 
-**TODO: Add description**
-
 ## Documentation
 
 - [Initial Architecture](pages/initial_architecture.md)
+- [Getting Started](pages/starting_guide.md)
 - You can find the online documentation [here](https://rawgit.com/poanetwork/poa-netstats-agent/master/doc/index.html)
 
 Or you can build the documenation locally running

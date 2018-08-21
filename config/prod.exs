@@ -26,8 +26,8 @@ config :poa_agent,
              identifier: "elixirNodeJSIntegration",
 
              # Authentication parameters
-             user: "971Iwekd",
-             password: "9BOZIf1uGHi2FIB",
+             user: "BK3eiZcT",
+             password: "MPr1n9B-ipvpYbj",
              token_url: "https://localhost:4003/session"
            ]
          }
