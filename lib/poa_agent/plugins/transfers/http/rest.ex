@@ -80,7 +80,7 @@ defmodule POAAgent.Plugins.Transfers.HTTP.REST do
 
     latency
     |> Latency.new
-    |> send_metric("networking_metric", state)
+    |> send_metric("networking_metrics", state)
   end
 
   defp send_metric(metric, metric_type, state) do
