@@ -34,7 +34,7 @@ defmodule POAAgent.Plugins.Transfer do
   In order to implement your Transfer Plugin you must implement 3 functions.
 
   - `init_transfer/1`: Called only once when the process starts
-  - `data_received/2`: This function is called every time a Collector sends metrics to the Transfer
+  - `data_received/4`: This function is called every time a Collector sends metrics to the Transfer
   - `handle_message/1`: This is called when the transfer process receives an Erlang message
   - `terminate/1`: Called just before stopping the process
 
@@ -47,7 +47,7 @@ defmodule POAAgent.Plugins.Transfer do
           {:ok, :no_state}
         end
 
-        def data_received(label, data, state) do
+        def data_received(label, metric_type, data, state) do
           IO.puts "Received data from the collector referenced by label"
           {:ok, :no_state}
         end
@@ -76,12 +76,12 @@ defmodule POAAgent.Plugins.Transfer do
   @doc """
     In this callback is called when a Collector sends data to this Transfer.
 
-    The data received is in `{label, data}` format where `label` identifies the Collector and the
-    data is the real data received.
+    Regarding the parameters, `label` identifies the Collector, `metric_type` is the metric type in String format, it is used in order
+    to know which kind of data we are sending, the `data` is the real data received, and the `state` is the Collector's state
 
     It must return `{:ok, state}`.
   """
-  @callback data_received(label :: atom(), data :: any(), state :: any()) :: {:ok, any()}
+  @callback data_received(label :: atom(), metric_type :: String.t, data :: any(), state :: any()) :: {:ok, any()}
 
   @doc """
     In this callback is called when the Transfer process receives an erlang message.
@@ -123,8 +123,8 @@ defmodule POAAgent.Plugins.Transfer do
       end
 
       @doc false
-      def handle_cast(%{label: label, data: data}, state) do
-        {:ok, internal_state} = data_received(label, data, state.internal_state)
+      def handle_cast(%{label: label, metric_type: metric_type, data: data}, state) do
+        {:ok, internal_state} = data_received(label, metric_type, data, state.internal_state)
         {:noreply, %{state | internal_state: internal_state}}
       end
       def handle_cast(msg, state) do

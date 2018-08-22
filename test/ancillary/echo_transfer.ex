@@ -11,7 +11,7 @@ defmodule EchoTransfer do
     {:ok, caller}
   end
 
-  def data_received(label, data, caller) do
+  def data_received(label, _metric_type, data, caller) do
     send(caller, {label, data})
     {:ok, caller}
   end
