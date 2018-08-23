@@ -32,12 +32,12 @@ defmodule POAAgent.Plugins.Transfers.HTTP.REST do
     {:ok, state}
   end
 
-  def data_received(label, data, state) when is_list(data) do
+  def data_received(label, metric_type, data, state) when is_list(data) do
     require Logger
     Logger.info("Received data from the collector referenced by label: #{label}.")
 
     state = Enum.reduce(data, state, fn(message, state) ->
-      {_, state} = send_metric(message, state)
+      {_, state} = send_metric(message, metric_type, state)
 
       state
     end)
@@ -45,8 +45,8 @@ defmodule POAAgent.Plugins.Transfers.HTTP.REST do
     {:ok, state}
   end
 
-  def data_received(label, data, state) do
-    data_received(label, [data], state)
+  def data_received(label, metric_type, data, state) do
+    data_received(label, metric_type, [data], state)
   end
 
   def terminate(_) do
@@ -80,10 +80,10 @@ defmodule POAAgent.Plugins.Transfers.HTTP.REST do
 
     latency
     |> Latency.new
-    |> send_metric(state)
+    |> send_metric("networking_metrics", state)
   end
 
-  defp send_metric(metric, state) do
+  defp send_metric(metric, metric_type, state) do
     url = "/data"
 
     data =
@@ -94,7 +94,7 @@ defmodule POAAgent.Plugins.Transfers.HTTP.REST do
     event =
       %{}
       |> Map.put(:id, state.identifier)
-      |> Map.put(:type, "ethereum_metrics") # for now only ethereum_metrics
+      |> Map.put(:type, metric_type)
       |> Map.put(:data, data)
       |> Msgpax.pack!()
 

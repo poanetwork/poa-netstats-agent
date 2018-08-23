@@ -38,6 +38,12 @@ defmodule POAAgent.Plugins.Collectors.Eth.Pending do
   end
 
   @doc false
+  @spec metric_type() :: String.t
+  def metric_type do
+    "ethereum_metrics"
+  end
+
+  @doc false
   @spec terminate(internal_state()) :: :ok
   def terminate(_state) do
     :ok

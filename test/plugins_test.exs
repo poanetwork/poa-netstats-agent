@@ -13,6 +13,10 @@ defmodule POAAgent.PluginsTest do
         {:transfer, "data retrieved", :no_state}
       end
 
+      def metric_type do
+        "my_metric_type"
+      end
+
       def terminate(_state) do
         :ok
       end
@@ -23,6 +27,7 @@ defmodule POAAgent.PluginsTest do
     assert Collector1.handle_info(:msg, :state) == {:noreply, :state}
     assert Collector1.handle_cast(:msg, :state) == {:noreply, :state}
     assert Collector1.code_change(:old, :state, :extra) == {:ok, :state}
+    assert Collector1.metric_type() == "my_metric_type"
     assert Collector1.terminate(:reason, :state) == :ok
 
   end
@@ -35,7 +40,7 @@ defmodule POAAgent.PluginsTest do
         {:ok, :no_state}
       end
 
-      def data_received(_label, _data, _state) do
+      def data_received(_label, _metric_type, _data, _state) do
         {:ok, :no_state}
       end
 
@@ -70,6 +75,10 @@ defmodule POAAgent.PluginsTest do
         {:transfer, data, test_pid}
       end
 
+      def metric_type do
+        "my_metric_type"
+      end
+
       def terminate(_state) do
         :ok
       end
@@ -82,8 +91,8 @@ defmodule POAAgent.PluginsTest do
         {:ok, test_pid}
       end
 
-      def data_received(label, data, test_pid) do
-        send test_pid, {:received, self(), label, data}
+      def data_received(label, metric_type, data, test_pid) do
+        send test_pid, {:received, self(), label, metric_type, data}
         {:ok, test_pid}
       end
 
@@ -102,7 +111,7 @@ defmodule POAAgent.PluginsTest do
     {:ok, cpid} = Collector2.start_link(%{name: :collector2, transfers: [transfer1], label: :label, args: self(), frequency: 2_000})
 
     assert_receive {:sent, ^cpid, "data retrieved"}, 20_000
-    assert_receive {:received, ^tpid, :label, "data retrieved"}, 20_000
+    assert_receive {:received, ^tpid, :label, "my_metric_type", "data retrieved"}, 20_000
 
   end
 end

@@ -8,7 +8,7 @@
     <title>POAAgent.Plugins.Collector – poa_agent v0.1.0</title>
     <link rel="stylesheet" href="dist/app-480ffdc169.css" />
     
-    <script src="dist/sidebar_items-303975f305.js"></script>
+    <script src="dist/sidebar_items-75149ca71e.js"></script>
     
     
     
@@ -129,12 +129,14 @@ and the Transfers related with it. A <code class="inline">Transfer</code> is a P
   Implementing A Collector Plugin
 </h2>
 
-<p>In order to implement your Collector Plugin you must implement 3 functions.</p>
+<p>In order to implement your Collector Plugin you must implement 4 functions.</p>
 <ul>
 <li><code class="inline">init_collector/1</code>: Called only once when the process starts
 </li>
 <li><code class="inline">collect/1</code>: This function is called periodically after <code class="inline">frequency</code> milliseconds. It is responsible
 of retrieving the metrics
+</li>
+<li><code class="inline">metric_type/0</code>: This function must return the metric type in <code class="inline">string</code> format (i.e “ethereum_metric”)
 </li>
 <li><code class="inline">terminate/1</code>: Called just before stopping the process
 </li>
@@ -150,6 +152,10 @@ of retrieving the metrics
   def collect(:no_state) do
     IO.puts &quot;I am collecting data!&quot;
     {:transfer, &quot;data retrieved&quot;, :no_state}
+  end
+
+  def metric_type do
+    &quot;my_metrics_type&quot;
   end
 
   def terminate(_state) do
@@ -208,6 +214,16 @@ end</code></pre>
 </div>
 <div class="summary-row">
   <div class="summary-signature">
+    <a href="#c:metric_type/0">metric_type()</a>
+  </div>
+  
+    <div class="summary-synopsis"><p>This callback must return the metric type in <code class="inline">string</code> format. For example, if your collector is gathering metrics about
+Ethereum you can use “ethereum_metric” here</p>
+</div>
+  
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
     <a href="#c:terminate/1">terminate(state)</a>
   </div>
   
@@ -245,7 +261,7 @@ end</code></pre>
     </a>
     <span class="signature">collect(state)</span>
     
-      <a href="https://github.com/poanetwork/poa-netstats-agent/blob/v0.1.0/lib/poa_agent/plugins/collector.ex#L101" class="view-source" rel="help" title="View Source">
+      <a href="https://github.com/poanetwork/poa-netstats-agent/blob/v0.1.0/lib/poa_agent/plugins/collector.ex#L106" class="view-source" rel="help" title="View Source">
        <span class="icon-code" aria-hidden="true"></span>
        <span class="sr-only">View Source</span>
      </a>
@@ -278,7 +294,7 @@ end</code></pre>
     </a>
     <span class="signature">init_collector(args)</span>
     
-      <a href="https://github.com/poanetwork/poa-netstats-agent/blob/v0.1.0/lib/poa_agent/plugins/collector.ex#L92" class="view-source" rel="help" title="View Source">
+      <a href="https://github.com/poanetwork/poa-netstats-agent/blob/v0.1.0/lib/poa_agent/plugins/collector.ex#L97" class="view-source" rel="help" title="View Source">
        <span class="icon-code" aria-hidden="true"></span>
        <span class="sr-only">View Source</span>
      </a>
@@ -304,6 +320,36 @@ end</code></pre>
 
   </section>
 </div>
+<div class="detail" id="c:metric_type/0">
+  
+  
+  <div class="detail-header">
+    <a href="#c:metric_type/0" class="detail-link" title="Link to this callback">
+      <span class="icon-link" aria-hidden="true"></span>
+      <span class="sr-only">Link to this callback</span>
+    </a>
+    <span class="signature">metric_type()</span>
+    
+      <a href="https://github.com/poanetwork/poa-netstats-agent/blob/v0.1.0/lib/poa_agent/plugins/collector.ex#L113" class="view-source" rel="help" title="View Source">
+       <span class="icon-code" aria-hidden="true"></span>
+       <span class="sr-only">View Source</span>
+     </a>
+    
+    
+    
+      <div class="specs">
+        
+          <pre>metric_type() :: <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>()</pre>
+        
+      </div>
+    
+  </div>
+  <section class="docstring">
+    <p>This callback must return the metric type in <code class="inline">string</code> format. For example, if your collector is gathering metrics about
+Ethereum you can use “ethereum_metric” here.</p>
+
+  </section>
+</div>
 <div class="detail" id="c:terminate/1">
   
   
@@ -314,7 +360,7 @@ end</code></pre>
     </a>
     <span class="signature">terminate(state)</span>
     
-      <a href="https://github.com/poanetwork/poa-netstats-agent/blob/v0.1.0/lib/poa_agent/plugins/collector.ex#L107" class="view-source" rel="help" title="View Source">
+      <a href="https://github.com/poanetwork/poa-netstats-agent/blob/v0.1.0/lib/poa_agent/plugins/collector.ex#L118" class="view-source" rel="help" title="View Source">
        <span class="icon-code" aria-hidden="true"></span>
        <span class="sr-only">View Source</span>
      </a>

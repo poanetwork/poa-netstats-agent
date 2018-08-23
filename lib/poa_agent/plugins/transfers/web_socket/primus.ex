@@ -43,7 +43,7 @@ defmodule POAAgent.Plugins.Transfers.WebSocket.Primus do
     {:ok, state}
   end
 
-  def data_received(label, data, %{connected?: false} = state) when is_list(data) do
+  def data_received(label, _metric_type, data, %{connected?: false} = state) when is_list(data) do
     last_metrics = Enum.reduce(data, state.last_metrics, fn(message, metrics) ->
       Map.put(metrics, label, message)
     end)
@@ -51,7 +51,7 @@ defmodule POAAgent.Plugins.Transfers.WebSocket.Primus do
     {:ok, %{state | last_metrics: last_metrics}}
   end
 
-  def data_received(label, [%Ethereum.Block{} = block], %{client: client} = state) do
+  def data_received(label, _metric_type, [%Ethereum.Block{} = block], %{client: client} = state) do
     require Logger
     Logger.info("Received data from the collector referenced by label: #{label}.")
 
@@ -66,7 +66,7 @@ defmodule POAAgent.Plugins.Transfers.WebSocket.Primus do
     {:ok, %{state | last_metrics: Map.put(state.last_metrics, label, block)}}
   end
 
-  def data_received(label, data, %{client: client} = state) when is_list(data) do
+  def data_received(label, _metric_type, data, %{client: client} = state) when is_list(data) do
     require Logger
     Logger.info("Received data from the collector referenced by label: #{label}.")
 
@@ -79,8 +79,8 @@ defmodule POAAgent.Plugins.Transfers.WebSocket.Primus do
     {:ok, %{state | last_metrics: last_metrics}}
   end
 
-  def data_received(label, data, state) do
-    data_received(label, [data], state)
+  def data_received(label, metric_type, data, state) do
+    data_received(label, metric_type, [data], state)
   end
 
   def handle_message(:attempt_to_connect, state) do

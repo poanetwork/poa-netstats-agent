@@ -257,7 +257,7 @@ defmodule POAAgent.Plugins.Collectors.Eth.PrimusTest do
   end
 
   defp send_to_transfer(transfer, label, data) do
-    GenServer.cast(transfer, %{label: label, data: data})
+    GenServer.cast(transfer, %{label: label, metric_type: "my_metric_type", data: data})
   end
 
   defp last_block_message() do

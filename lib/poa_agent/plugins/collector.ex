@@ -51,11 +51,12 @@ defmodule POAAgent.Plugins.Collector do
 
   ## Implementing A Collector Plugin
 
-  In order to implement your Collector Plugin you must implement 3 functions.
+  In order to implement your Collector Plugin you must implement 4 functions.
 
   - `init_collector/1`: Called only once when the process starts
   - `collect/1`: This function is called periodically after `frequency` milliseconds. It is responsible
   of retrieving the metrics
+  - `metric_type/0`: This function must return the metric type in `string` format (i.e "ethereum_metric")
   - `terminate/1`: Called just before stopping the process
 
   This is a simple example of custom Collector Plugin
@@ -70,6 +71,10 @@ defmodule POAAgent.Plugins.Collector do
         def collect(:no_state) do
           IO.puts "I am collecting data!"
           {:transfer, "data retrieved", :no_state}
+        end
+
+        def metric_type do
+          "my_metrics_type"
         end
 
         def terminate(_state) do
@@ -100,6 +105,12 @@ defmodule POAAgent.Plugins.Collector do
   """
   @callback collect(state :: any()) :: {:transfer, data :: any(), state :: any()}
                                      | {:notransfer, state :: any()}
+
+  @doc """
+  This callback must return the metric type in `string` format. For example, if your collector is gathering metrics about
+  Ethereum you can use "ethereum_metric" here.
+  """
+  @callback metric_type() :: String.t()
 
   @doc """
     This callback is called just before the Process goes down. This is a good place for closing connections.
@@ -166,7 +177,7 @@ defmodule POAAgent.Plugins.Collector do
 
       @doc false
       defp transfer({:transfer, data, internal_state}, label, transfers) do
-        Enum.each(transfers, &GenServer.cast(&1, %{label: label, data: data}))
+        Enum.each(transfers, &GenServer.cast(&1, %{label: label, metric_type: metric_type(), data: data}))
         internal_state
       end
       defp transfer({:notransfer, internal_state}, _label, _transfers) do

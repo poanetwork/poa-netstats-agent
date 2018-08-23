@@ -8,7 +8,7 @@
     <title>POAAgent.Plugins.Transfer – poa_agent v0.1.0</title>
     <link rel="stylesheet" href="dist/app-480ffdc169.css" />
     
-    <script src="dist/sidebar_items-303975f305.js"></script>
+    <script src="dist/sidebar_items-75149ca71e.js"></script>
     
     
     
@@ -115,7 +115,7 @@ process per each one of them. That configuration is referenced by :transfers key
 <ul>
 <li><code class="inline">init_transfer/1</code>: Called only once when the process starts
 </li>
-<li><code class="inline">data_received/2</code>: This function is called every time a Collector sends metrics to the Transfer
+<li><code class="inline">data_received/4</code>: This function is called every time a Collector sends metrics to the Transfer
 </li>
 <li><code class="inline">handle_message/1</code>: This is called when the transfer process receives an Erlang message
 </li>
@@ -130,7 +130,7 @@ process per each one of them. That configuration is referenced by :transfers key
     {:ok, :no_state}
   end
 
-  def data_received(label, data, state) do
+  def data_received(label, metric_type, data, state) do
     IO.puts &quot;Received data from the collector referenced by label&quot;
     {:ok, :no_state}
   end
@@ -168,7 +168,7 @@ end</code></pre>
     </h2>
     <div class="summary-row">
   <div class="summary-signature">
-    <a href="#c:data_received/3">data_received(label, data, state)</a>
+    <a href="#c:data_received/4">data_received(label, metric_type, data, state)</a>
   </div>
   
     <div class="summary-synopsis"><p>In this callback is called when a Collector sends data to this Transfer</p>
@@ -225,15 +225,15 @@ end</code></pre>
             </a>
             Callbacks
           </h1>
-          <div class="detail" id="c:data_received/3">
+          <div class="detail" id="c:data_received/4">
   
   
   <div class="detail-header">
-    <a href="#c:data_received/3" class="detail-link" title="Link to this callback">
+    <a href="#c:data_received/4" class="detail-link" title="Link to this callback">
       <span class="icon-link" aria-hidden="true"></span>
       <span class="sr-only">Link to this callback</span>
     </a>
-    <span class="signature">data_received(label, data, state)</span>
+    <span class="signature">data_received(label, metric_type, data, state)</span>
     
       <a href="https://github.com/poanetwork/poa-netstats-agent/blob/v0.1.0/lib/poa_agent/plugins/transfer.ex#L84" class="view-source" rel="help" title="View Source">
        <span class="icon-code" aria-hidden="true"></span>
@@ -244,15 +244,20 @@ end</code></pre>
     
       <div class="specs">
         
-          <pre>data_received(label :: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>(), data :: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">any</a>(), state :: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">any</a>()) :: {:ok, <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">any</a>()}</pre>
+          <pre>data_received(
+  label :: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>(),
+  metric_type :: <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>(),
+  data :: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">any</a>(),
+  state :: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">any</a>()
+) :: {:ok, <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">any</a>()}</pre>
         
       </div>
     
   </div>
   <section class="docstring">
     <p>  In this callback is called when a Collector sends data to this Transfer.</p>
-<p>  The data received is in <code class="inline">{label, data}</code> format where <code class="inline">label</code> identifies the Collector and the
-  data is the real data received.</p>
+<p>  Regarding the parameters, <code class="inline">label</code> identifies the Collector, <code class="inline">metric_type</code> is the metric type in String format, it is used in order
+  to know which kind of data we are sending, the <code class="inline">data</code> is the real data received, and the <code class="inline">state</code> is the Collector’s state</p>
 <p>  It must return <code class="inline">{:ok, state}</code>.</p>
 
   </section>

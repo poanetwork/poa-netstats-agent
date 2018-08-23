@@ -8,7 +8,7 @@
     <title>POAAgent.Plugins.Transfers.WebSocket.Primus – poa_agent v0.1.0</title>
     <link rel="stylesheet" href="dist/app-480ffdc169.css" />
     
-    <script src="dist/sidebar_items-303975f305.js"></script>
+    <script src="dist/sidebar_items-75149ca71e.js"></script>
     
     
     
@@ -99,7 +99,7 @@
     </h2>
     <div class="summary-row">
   <div class="summary-signature">
-    <a href="#data_received/3">data_received(label, data, state)</a>
+    <a href="#data_received/4">data_received(label, metric_type, data, state)</a>
   </div>
   
     <div class="summary-synopsis"><p>In this callback is called when a Collector sends data to this Transfer</p>
@@ -156,15 +156,15 @@
             </a>
             Functions
           </h1>
-          <div class="detail" id="data_received/3">
+          <div class="detail" id="data_received/4">
   
   
   <div class="detail-header">
-    <a href="#data_received/3" class="detail-link" title="Link to this function">
+    <a href="#data_received/4" class="detail-link" title="Link to this function">
       <span class="icon-link" aria-hidden="true"></span>
       <span class="sr-only">Link to this function</span>
     </a>
-    <span class="signature">data_received(label, data, state)</span>
+    <span class="signature">data_received(label, metric_type, data, state)</span>
     
       <a href="https://github.com/poanetwork/poa-netstats-agent/blob/v0.1.0/lib/poa_agent/plugins/transfers/web_socket/primus.ex#L82" class="view-source" rel="help" title="View Source">
        <span class="icon-code" aria-hidden="true"></span>
@@ -176,10 +176,10 @@
   </div>
   <section class="docstring">
     <p>  In this callback is called when a Collector sends data to this Transfer.</p>
-<p>  The data received is in <code class="inline">{label, data}</code> format where <code class="inline">label</code> identifies the Collector and the
-  data is the real data received.</p>
+<p>  Regarding the parameters, <code class="inline">label</code> identifies the Collector, <code class="inline">metric_type</code> is the metric type in String format, it is used in order
+  to know which kind of data we are sending, the <code class="inline">data</code> is the real data received, and the <code class="inline">state</code> is the Collector’s state</p>
 <p>  It must return <code class="inline">{:ok, state}</code>.</p>
-<p>Callback implementation for <a href="POAAgent.Plugins.Transfer.html#c:data_received/3"><code class="inline">POAAgent.Plugins.Transfer.data_received/3</code></a>.</p>
+<p>Callback implementation for <a href="POAAgent.Plugins.Transfer.html#c:data_received/4"><code class="inline">POAAgent.Plugins.Transfer.data_received/4</code></a>.</p>
 
   </section>
 </div>
