@@ -5,9 +5,10 @@ defmodule POAAgent.Entity.ProtocolTest do
   alias POAAgent.Entity.Ethereum.Block
   alias POAAgent.Entity.Ethereum.History
   alias POAAgent.Entity.Ethereum.Pending
-  alias POAAgent.Entity.Ethereum.Statistics
+  alias POAAgent.Entity.Ethereum
   alias POAAgent.Entity.Host.Information
   alias POAAgent.Entity.Host.Latency
+  alias POAAgent.Entity.System
   alias POAAgent.Entity
   
   test "Data protocol test for block entity" do
@@ -39,7 +40,7 @@ defmodule POAAgent.Entity.ProtocolTest do
   end
 
   test "Data protocol test for statistics entity" do
-    entity = %Statistics{}
+    entity = %Ethereum.Statistics{}
     formated_entity = format_entity(entity)
 
     assert %Data{type: "statistics", body: formated_entity} == Data.Format.to_data(entity)
@@ -50,6 +51,13 @@ defmodule POAAgent.Entity.ProtocolTest do
     formated_entity = format_entity(entity)
 
     assert %Data{type: "latency", body: formated_entity} == Data.Format.to_data(entity)
+  end
+
+  test "Data protocol test for System Stats entity" do
+    entity = %System.Statistics{}
+    formated_entity = format_entity(entity)
+
+    assert %Data{type: "statistics", body: formated_entity} == Data.Format.to_data(entity)
   end
 
   defp format_entity(entity) do

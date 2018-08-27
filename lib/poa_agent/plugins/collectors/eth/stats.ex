@@ -74,7 +74,7 @@ defmodule POAAgent.Plugins.Collectors.Eth.Stats do
          {:ok, mining} <- Ethereumex.HttpClient.eth_mining(),
          {:ok, hashrate} <- Ethereumex.HttpClient.eth_hashrate(),
          {:ok, syncing} <- Ethereumex.HttpClient.eth_syncing(),
-         {:ok, gas_price} <- Ethereumex.HttpClient.eth_gas_price()
+         {:ok, gas_price} <- eth_gas_price()
     do
       peers = String.to_integer(POAAgent.Format.Literal.Hex.decimalize(peers))
       hashrate = String.to_integer(POAAgent.Format.Literal.Hex.decimalize(hashrate))
@@ -112,6 +112,15 @@ defmodule POAAgent.Plugins.Collectors.Eth.Stats do
       peers: 0,
       uptime: uptime(tries, down)
     }
+  end
+
+  defp eth_gas_price do
+    try do
+      Ethereumex.HttpClient.eth_gas_price()
+    catch
+      :exit, _ ->
+        {:ok, "0x0"}
+    end
   end
 
   defp uptime(tries, down) do

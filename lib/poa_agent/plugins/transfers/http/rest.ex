@@ -110,6 +110,7 @@ defmodule POAAgent.Plugins.Transfers.HTTP.REST do
       {:ok, %HTTPoison.Response{status_code: 401}} ->
         Logger.warn("Error 401, getting a new Token")
         jwt_token = new_token(state)
+        Logger.info("The new Token is #{inspect jwt_token}")
         result = HTTPoison.post(address, event, [@content_type_header, bearer_auth_header(jwt_token)])
         {result, %State{state | token: jwt_token}}
       {:ok, %HTTPoison.Response{status_code: error} = result} ->
