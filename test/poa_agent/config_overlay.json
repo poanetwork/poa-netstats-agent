@@ -2,6 +2,10 @@
     "POAAgent":{
         "collectors":[
             {
+                "id": "other_collector",
+                "myfield": "myvalue"
+            },
+            {
                 "id": "eth_information",
                 "url": "http://localhost:8546",
                 "name": "NewNodeName",
@@ -10,10 +14,16 @@
         ],
         "transfers":[
             {
+                "id": "transfer1",
+                "somefield": "somevalue",
+                "somefield2": "somevalue2"
+            },
+            {
                 "id": "rest_transfer",
                 "address": "http://localhost:4003",
                 "identifier": "NewIdentifier",
-                "secret": "newsecret"
+                "user": "user1",
+                "password": "password1"
             }
         ]
     }

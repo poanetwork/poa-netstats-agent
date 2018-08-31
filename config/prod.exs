@@ -26,8 +26,8 @@ config :poa_agent,
              identifier: "elixirNodeJSIntegration",
 
              # Authentication parameters
-             user: "rUN7afCO",
-             password: "_3IC09xfMtAW4Hr",
+             user: "AhvK0DSj",
+             password: "EkiuUkyOD6KLas8",
              token_url: "https://localhost:4003/session"
            ]
          }
@@ -41,5 +41,5 @@ config :poa_agent,
          {:eth_stats, [:rest_transfer]},
          {:eth_pending, [:rest_transfer]},
          {:eth_information, [:rest_transfer]},
-         {:system_collector, []}
+         {:system_collector, [:rest_transfer]}
        ]

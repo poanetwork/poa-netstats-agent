@@ -24,21 +24,21 @@ defmodule POAAgent.Configuration do
     defp config(overlay, default) do
       overlay
       |> Kernel.get_in(["POAAgent", "transfers"])
-      |> Kernel.hd()
       |> merge_overlay_into_config(default)
     end
 
-    defp merge_overlay_into_config(overlay, [{id, module_name, default}]) do
-      keys = [
-        "address",
-        "identifier",
-        "secret"
-      ]
-      ^id = String.to_existing_atom(Map.fetch!(overlay, "id"))
-      restricted = Map.take(overlay, keys)
-      want = POAAgent.Configuration.to_keyword(restricted)
-      final = Keyword.merge(default, want)
-      [{id, module_name, final}]
+    defp merge_overlay_into_config(overlay, default) do
+      Enum.flat_map(default,
+        fn {id, module_name, args} ->
+          case POAAgent.Configuration.search(overlay, Atom.to_string(id)) do
+            [] ->
+              []
+            overlay_args ->
+              overlay_args = POAAgent.Configuration.to_keyword(overlay_args)
+              final = Keyword.merge(args, overlay_args)
+              [{id, module_name, final}]
+          end
+        end)
     end
   end
 
@@ -65,28 +65,35 @@ defmodule POAAgent.Configuration do
     defp config(overlay, default) do
       overlay
       |> Kernel.get_in(["POAAgent", "collectors"])
-      |> Kernel.hd()
       |> merge_overlay_into_config(default)
     end
 
-    defp merge_overlay_into_config(overlay, [{id, module_name, freq, tag, default} | rest]) do
-      keys = [
-        "url",
-        "name",
-        "contact"
-      ]
-      ^id = String.to_existing_atom(Map.fetch!(overlay, "id"))
-      restricted = Map.take(overlay, keys)
-      want = POAAgent.Configuration.to_keyword(restricted)
-      final = Keyword.merge(default, want)
-      [{id, module_name, freq, tag, final}] ++ rest
+    defp merge_overlay_into_config(overlay, default) do
+      Enum.flat_map(default,
+        fn {id, module_name, freq, tag, args} ->
+          case POAAgent.Configuration.search(overlay, Atom.to_string(id)) do
+            [] ->
+              []
+            overlay_args ->
+              overlay_args = POAAgent.Configuration.to_keyword(overlay_args)
+              final = Keyword.merge(args, overlay_args)
+              [{id, module_name, freq, tag, final}]
+          end
+        end)
     end
   end
 
+  def to_keyword(nil), do: []
   def to_keyword(x) do
     f = fn {k, v} ->
-      {String.to_existing_atom(k), v}
+      {String.to_atom(k), v}
     end
     Enum.into(x, [], f)
+  end
+
+  def search(list, key) do
+    Enum.find(list, fn(map) ->
+      Map.get(map, "id") == key
+    end)
   end
 end
